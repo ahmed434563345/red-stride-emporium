@@ -28,6 +28,26 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   const handleAddToCart = async () => {
     setIsLoading(true);
+    // Get existing cart from localStorage
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    
+    // Add product to cart with default size and quantity
+    const cartItem = {
+      ...product,
+      quantity: 1,
+      size: 'One Size', // Default for items added from card
+      addedAt: new Date().toISOString()
+    };
+    
+    const existingItemIndex = cart.findIndex(item => item.id === product.id);
+    if (existingItemIndex > -1) {
+      cart[existingItemIndex].quantity += 1;
+    } else {
+      cart.push(cartItem);
+    }
+    
+    localStorage.setItem('cart', JSON.stringify(cart));
+    
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
     setIsLoading(false);
@@ -35,12 +55,19 @@ const ProductCard = ({ product }: ProductCardProps) => {
   };
 
   const handleToggleWishlist = () => {
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    let updatedWishlist;
+    
+    if (isWishlisted) {
+      updatedWishlist = wishlist.filter(item => item.id !== product.id);
+      toast.success(`${product.name} removed from wishlist`);
+    } else {
+      updatedWishlist = [...wishlist, product];
+      toast.success(`${product.name} added to wishlist!`);
+    }
+    
+    localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
     setIsWishlisted(!isWishlisted);
-    toast.success(
-      isWishlisted 
-        ? `${product.name} removed from wishlist` 
-        : `${product.name} added to wishlist!`
-    );
   };
 
   const discountPercentage = product.originalPrice 
@@ -117,10 +144,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </Link>
 
           <div className="flex items-center gap-2">
-            <span className="font-bold text-lg">${product.price}</span>
+            <span className="font-bold text-lg">{product.price} L.E</span>
             {product.originalPrice && (
               <span className="text-sm text-muted-foreground line-through">
-                ${product.originalPrice}
+                {product.originalPrice} L.E
               </span>
             )}
           </div>
