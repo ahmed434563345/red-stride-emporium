@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,32 +18,20 @@ interface CartItem {
 }
 
 const Cart = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: '1',
-      name: 'Air Jordan 4 Retro "Bred"',
-      price: 200,
-      image: '/lovable-uploads/9b98bff4-8569-4533-8eb7-e7a12673afc3.png',
-      quantity: 1,
-      size: 'US 10'
-    },
-    {
-      id: '2',
-      name: 'Barcelona Home Jersey 2024',
-      price: 90,
-      image: '/lovable-uploads/0e229d93-8ed2-4475-9fa4-c9dc86c63f76.png',
-      quantity: 2,
-      size: 'Large'
-    },
-    {
-      id: '3',
-      name: 'American Eagle Black Graphic Tee',
-      price: 25,
-      image: '/lovable-uploads/ecebd1a4-2de5-4911-bf69-38697a269054.png',
-      quantity: 1,
-      size: 'Medium'
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+  useEffect(() => {
+    // Load cart from localStorage
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      setCartItems(JSON.parse(savedCart));
     }
-  ]);
+  }, []);
+
+  const updateCart = (newCartItems: CartItem[]) => {
+    setCartItems(newCartItems);
+    localStorage.setItem('cart', JSON.stringify(newCartItems));
+  };
 
   const updateQuantity = (id: string, newQuantity: number) => {
     if (newQuantity === 0) {
@@ -51,21 +39,21 @@ const Cart = () => {
       return;
     }
     
-    setCartItems(items =>
-      items.map(item =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
+    const updatedItems = cartItems.map(item =>
+      item.id === id ? { ...item, quantity: newQuantity } : item
     );
+    updateCart(updatedItems);
   };
 
   const removeItem = (id: string) => {
-    setCartItems(items => items.filter(item => item.id !== id));
+    const updatedItems = cartItems.filter(item => item.id !== id);
+    updateCart(updatedItems);
     toast.success('Item removed from cart');
   };
 
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-  const shipping = subtotal > 100 ? 0 : 10;
-  const tax = subtotal * 0.08;
+  const shipping = subtotal > 1700 ? 0 : 170; // Free shipping over 1700 L.E
+  const tax = subtotal * 0.14; // 14% tax
   const total = subtotal + shipping + tax;
 
   return (
@@ -100,7 +88,7 @@ const Cart = () => {
                         {item.size && (
                           <p className="text-sm text-muted-foreground">Size: {item.size}</p>
                         )}
-                        <p className="font-semibold">${item.price}</p>
+                        <p className="font-semibold">{item.price} L.E</p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <Button
@@ -152,20 +140,20 @@ const Cart = () => {
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>${subtotal.toFixed(2)}</span>
+                      <span>{subtotal.toFixed(2)} L.E</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Shipping</span>
-                      <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+                      <span>{shipping === 0 ? 'Free' : `${shipping.toFixed(2)} L.E`}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Tax</span>
-                      <span>${tax.toFixed(2)}</span>
+                      <span>Tax (14%)</span>
+                      <span>{tax.toFixed(2)} L.E</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-semibold text-lg">
                       <span>Total</span>
-                      <span>${total.toFixed(2)}</span>
+                      <span>{total.toFixed(2)} L.E</span>
                     </div>
                   </div>
 
@@ -173,9 +161,9 @@ const Cart = () => {
                     Proceed to Checkout
                   </Button>
 
-                  {subtotal < 100 && (
+                  {subtotal < 1700 && (
                     <p className="text-sm text-muted-foreground mt-3 text-center">
-                      Add ${(100 - subtotal).toFixed(2)} more for free shipping
+                      Add {(1700 - subtotal).toFixed(2)} L.E more for free shipping
                     </p>
                   )}
                 </CardContent>
