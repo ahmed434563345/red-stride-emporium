@@ -1,5 +1,5 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,8 @@ import { Plus, Edit, Trash2, Users, ShoppingBag, DollarSign, TrendingUp } from '
 import { toast } from 'sonner';
 
 const Admin = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [products, setProducts] = useState([
     {
       id: '1',
@@ -39,7 +41,6 @@ const Admin = () => {
       status: 'out_of_stock'
     }
   ]);
-
   const [newProduct, setNewProduct] = useState({
     name: '',
     price: '',
@@ -48,6 +49,78 @@ const Admin = () => {
     stock: '',
     image: ''
   });
+  const [editingProduct, setEditingProduct] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is admin
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isAuth = localStorage.getItem('isAuthenticated') === 'true';
+    
+    if (isAuth && user.isAdmin) {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Admin credentials
+    if (loginForm.username === 'admin' && loginForm.password === 'admin123') {
+      setIsAuthenticated(true);
+      const adminUser = {
+        id: 'admin',
+        email: 'admin@admin.com',
+        name: 'Admin',
+        isAdmin: true
+      };
+      localStorage.setItem('user', JSON.stringify(adminUser));
+      localStorage.setItem('isAuthenticated', 'true');
+      toast.success('Admin login successful!');
+    } else {
+      toast.error('Invalid credentials');
+    }
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    setNewProduct({
+      name: product.name,
+      price: product.price.toString(),
+      category: product.category,
+      description: '',
+      stock: product.stock.toString(),
+      image: ''
+    });
+  };
+
+  const handleUpdateProduct = () => {
+    if (!editingProduct) return;
+    
+    const updatedProducts = products.map(p => 
+      p.id === editingProduct.id 
+        ? {
+            ...p,
+            name: newProduct.name,
+            price: parseFloat(newProduct.price),
+            category: newProduct.category,
+            stock: parseInt(newProduct.stock) || 0
+          }
+        : p
+    );
+    
+    setProducts(updatedProducts);
+    setEditingProduct(null);
+    setNewProduct({
+      name: '',
+      price: '',
+      category: '',
+      description: '',
+      stock: '',
+      image: ''
+    });
+    toast.success('Product updated successfully!');
+  };
 
   const handleAddProduct = () => {
     if (!newProduct.name || !newProduct.price || !newProduct.category) {
@@ -107,6 +180,52 @@ const Admin = () => {
       color: 'bg-red-500'
     }
   ];
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-16">
+          <div className="max-w-md mx-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center">Admin Login</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div>
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      value={loginForm.username}
+                      onChange={(e) => setLoginForm(prev => ({ ...prev, username: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full athletic-gradient">
+                    Login
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Username: admin | Password: admin123
+                  </p>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,7 +288,11 @@ const Admin = () => {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="icon">
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => handleEditProduct(product)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button 
@@ -193,7 +316,7 @@ const Admin = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Plus className="h-5 w-5" />
-                  Add New Product
+                  {editingProduct ? 'Edit Product' : 'Add New Product'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -271,13 +394,33 @@ const Admin = () => {
                 </div>
 
                 <Button 
-                  onClick={handleAddProduct}
+                  onClick={editingProduct ? handleUpdateProduct : handleAddProduct}
                   className="mt-6 athletic-gradient"
                   size="lg"
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Product
+                  {editingProduct ? 'Update Product' : 'Add Product'}
                 </Button>
+                
+                {editingProduct && (
+                  <Button 
+                    onClick={() => {
+                      setEditingProduct(null);
+                      setNewProduct({
+                        name: '',
+                        price: '',
+                        category: '',
+                        description: '',
+                        stock: '',
+                        image: ''
+                      });
+                    }}
+                    variant="outline"
+                    className="mt-2 ml-4"
+                  >
+                    Cancel Edit
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
