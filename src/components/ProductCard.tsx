@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,8 +25,21 @@ interface ProductCardProps {
 const ProductCard = ({ product }: ProductCardProps) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const checkAuthentication = () => {
+    const user = localStorage.getItem('user');
+    if (!user) {
+      toast.error('Please sign in to use this feature');
+      navigate('/signin');
+      return false;
+    }
+    return true;
+  };
 
   const handleAddToCart = async () => {
+    if (!checkAuthentication()) return;
+    
     setIsLoading(true);
     // Get existing cart from localStorage
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -55,6 +68,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
   };
 
   const handleToggleWishlist = () => {
+    if (!checkAuthentication()) return;
+    
     const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
     let updatedWishlist;
     

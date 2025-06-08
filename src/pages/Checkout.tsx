@@ -32,6 +32,14 @@ const Checkout = () => {
 
   useEffect(() => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const user = localStorage.getItem('user');
+    
+    if (!user) {
+      toast.error('Please sign in to proceed with checkout');
+      navigate('/signin');
+      return;
+    }
+    
     if (cart.length === 0) {
       navigate('/cart');
       return;
@@ -50,12 +58,17 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
+    if (!shippingInfo.fullName || !shippingInfo.email || !shippingInfo.phone || !shippingInfo.address) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
     setIsProcessing(true);
     
     // Simulate payment processing
     await new Promise(resolve => setTimeout(resolve, 3000));
     
-    // Save order to localStorage
+    // Save order to localStorage and admin orders
     const order = {
       id: `ORD-${Date.now()}`,
       items: cartItems,
@@ -64,19 +77,26 @@ const Checkout = () => {
       shippingMethod,
       total,
       date: new Date().toISOString(),
-      status: 'confirmed'
+      status: 'confirmed',
+      userId: JSON.parse(localStorage.getItem('user') || '{}').id
     };
     
+    // Save to user's orders
     const orders = JSON.parse(localStorage.getItem('orders') || '[]');
     orders.push(order);
     localStorage.setItem('orders', JSON.stringify(orders));
+    
+    // Save to admin orders
+    const adminOrders = JSON.parse(localStorage.getItem('adminOrders') || '[]');
+    adminOrders.push(order);
+    localStorage.setItem('adminOrders', JSON.stringify(adminOrders));
     
     // Clear cart
     localStorage.removeItem('cart');
     
     setIsProcessing(false);
     toast.success('Order placed successfully!');
-    navigate('/order-confirmation', { state: { orderId: order.id } });
+    navigate('/payment-success', { state: { orderId: order.id } });
   };
 
   return (
@@ -183,7 +203,7 @@ const Checkout = () => {
                   <Checkbox
                     id="saveInfo"
                     checked={saveInfo}
-                    onCheckedChange={setSaveInfo}
+                    onCheckedChange={(checked) => setSaveInfo(checked === true)}
                   />
                   <Label htmlFor="saveInfo">Save this information for next time</Label>
                 </div>

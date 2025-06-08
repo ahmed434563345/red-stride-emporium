@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,14 +20,23 @@ interface CartItem {
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if user is authenticated
+    const user = localStorage.getItem('user');
+    if (!user) {
+      toast.error('Please sign in to view your cart');
+      navigate('/signin');
+      return;
+    }
+
     // Load cart from localStorage
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
       setCartItems(JSON.parse(savedCart));
     }
-  }, []);
+  }, [navigate]);
 
   const updateCart = (newCartItems: CartItem[]) => {
     setCartItems(newCartItems);
@@ -68,7 +78,9 @@ const Cart = () => {
             <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
             <h2 className="text-2xl font-semibold mb-2">Your cart is empty</h2>
             <p className="text-muted-foreground mb-6">Add some items to get started</p>
-            <Button className="athletic-gradient">Continue Shopping</Button>
+            <Link to="/products">
+              <Button className="athletic-gradient">Continue Shopping</Button>
+            </Link>
           </div>
         ) : (
           <div className="grid lg:grid-cols-3 gap-8">
@@ -157,9 +169,11 @@ const Cart = () => {
                     </div>
                   </div>
 
-                  <Button className="w-full mt-6 athletic-gradient" size="lg">
-                    Proceed to Checkout
-                  </Button>
+                  <Link to="/checkout">
+                    <Button className="w-full mt-6 athletic-gradient" size="lg">
+                      Proceed to Checkout
+                    </Button>
+                  </Link>
 
                   {subtotal < 1700 && (
                     <p className="text-sm text-muted-foreground mt-3 text-center">
