@@ -3,12 +3,11 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Navigation from '@/components/Navigation';
-import ProductCard from '@/components/ProductCard';
+import ProductSection from '@/components/ProductSection';
 import { ArrowRight, Truck, Shield, RotateCcw } from 'lucide-react';
 
 const Index = () => {
-  // Mock featured products using uploaded images
-  const featuredProducts = [
+  const hotTrendyShoes = [
     {
       id: '1',
       name: 'Air Jordan 4 Retro "Bred"',
@@ -16,15 +15,6 @@ const Index = () => {
       originalPrice: 250,
       image: '/lovable-uploads/9b98bff4-8569-4533-8eb7-e7a12673afc3.png',
       category: 'Shoes',
-      isNew: true,
-      inStock: true
-    },
-    {
-      id: '2',
-      name: 'Barcelona Home Jersey 2024',
-      price: 90,
-      image: '/lovable-uploads/0e229d93-8ed2-4475-9fa4-c9dc86c63f76.png',
-      category: 'Athletic Wear',
       isNew: true,
       inStock: true
     },
@@ -42,6 +32,85 @@ const Index = () => {
       price: 220,
       image: '/lovable-uploads/70691133-4b92-4f11-ae0e-8c73f1267caa.png',
       category: 'Shoes',
+      inStock: true
+    },
+    {
+      id: '5',
+      name: 'Air Jordan 4 "White Cement"',
+      price: 210,
+      image: '/lovable-uploads/1ca03270-8496-4b5d-aa10-394359a7f5f5.png',
+      category: 'Shoes',
+      inStock: true
+    }
+  ];
+
+  const athleticWear = [
+    {
+      id: '2',
+      name: 'Barcelona Home Jersey 2024',
+      price: 90,
+      image: '/lovable-uploads/0e229d93-8ed2-4475-9fa4-c9dc86c63f76.png',
+      category: 'Athletic Wear',
+      isNew: true,
+      inStock: true
+    },
+    {
+      id: '6',
+      name: 'Nike Dri-FIT Training Shirt',
+      price: 45,
+      image: '/lovable-uploads/0e229d93-8ed2-4475-9fa4-c9dc86c63f76.png',
+      category: 'Athletic Wear',
+      inStock: true
+    },
+    {
+      id: '10',
+      name: 'Adidas Performance Tank',
+      price: 35,
+      image: '/lovable-uploads/0e229d93-8ed2-4475-9fa4-c9dc86c63f76.png',
+      category: 'Athletic Wear',
+      inStock: true
+    },
+    {
+      id: '11',
+      name: 'Under Armour Training Shorts',
+      price: 55,
+      image: '/lovable-uploads/0e229d93-8ed2-4475-9fa4-c9dc86c63f76.png',
+      category: 'Athletic Wear',
+      inStock: true
+    }
+  ];
+
+  const outerwear = [
+    {
+      id: '7',
+      name: 'American Eagle Olive Graphic Tee',
+      price: 28,
+      image: '/lovable-uploads/775ffd32-b47b-4081-b560-24e17fb8664a.png',
+      category: 'Outerwear',
+      inStock: true
+    },
+    {
+      id: '9',
+      name: 'American Eagle Teal Eagle Tee',
+      price: 26,
+      image: '/lovable-uploads/d7239c31-30da-4311-9456-7f8cdcb03b81.png',
+      category: 'Outerwear',
+      inStock: true
+    },
+    {
+      id: '12',
+      name: 'Nike Tech Fleece Hoodie',
+      price: 85,
+      image: '/lovable-uploads/775ffd32-b47b-4081-b560-24e17fb8664a.png',
+      category: 'Outerwear',
+      inStock: true
+    },
+    {
+      id: '13',
+      name: 'Adidas Wind Jacket',
+      price: 75,
+      image: '/lovable-uploads/775ffd32-b47b-4081-b560-24e17fb8664a.png',
+      category: 'Outerwear',
       inStock: true
     }
   ];
@@ -152,35 +221,34 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Featured Products</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Handpicked premium items that define athletic excellence
-            </p>
-          </div>
-          
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-          
-          <div className="text-center mt-12">
-            <Link to="/products">
-              <Button size="lg" className="athletic-gradient">
-                View All Products
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Hot Trendy Shoes Section */}
+      <ProductSection
+        title="Hot Trendy Shoes"
+        description="The hottest and most trending sneakers of the season"
+        products={hotTrendyShoes}
+        viewAllLink="/shoes"
+      />
+
+      {/* Athletic Wear Section */}
+      <div className="bg-gray-50">
+        <ProductSection
+          title="Athletic Wear"
+          description="Performance gear for athletes and fitness enthusiasts"
+          products={athleticWear}
+          viewAllLink="/athletic-wear"
+        />
+      </div>
+
+      {/* Outerwear Section */}
+      <ProductSection
+        title="Outerwear"
+        description="Stylish jackets and casual wear for every occasion"
+        products={outerwear}
+        viewAllLink="/outerwear"
+      />
 
       {/* Features Section */}
-      <section className="py-20">
+      <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center space-y-4">
@@ -188,7 +256,7 @@ const Index = () => {
                 <Truck className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold">Free Shipping</h3>
-              <p className="text-muted-foreground">Free shipping on orders over $100</p>
+              <p className="text-muted-foreground">Free shipping on orders over 1700 L.E</p>
             </div>
             
             <div className="text-center space-y-4">
