@@ -9,11 +9,12 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  originalPrice?: number;
+  original_price?: number;
   image: string;
   category: string;
-  isNew?: boolean;
-  inStock: boolean;
+  stock: number;
+  is_new?: boolean;
+  brand?: string;
 }
 
 interface ProductSectionProps {

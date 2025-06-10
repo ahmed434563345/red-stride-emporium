@@ -1,55 +1,54 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import ProductCard from '@/components/ProductCard';
-import VisitorTracker from '@/components/VisitorTracker';
-import SEOHead from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Search, Filter } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import VisitorTracker from '@/components/VisitorTracker';
 
 const Products = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('featured');
-  const [filterCategory, setFilterCategory] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
-  // Fetch products from Supabase
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ['products'],
+    queryKey: ['products', sortBy, categoryFilter],
     queryFn: async () => {
-      const { data, error } = await supabase.from('products').select('*');
+      let query = supabase.from('products').select('*');
+      
+      if (categoryFilter !== 'all') {
+        query = query.eq('category', categoryFilter);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      return data;
+
+      // Sort products based on sortBy
+      return data.sort((a, b) => {
+        switch (sortBy) {
+          case 'price-low':
+            return a.price - b.price;
+          case 'price-high':
+            return b.price - a.price;
+          case 'newest':
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          case 'name':
+            return a.name.localeCompare(b.name);
+          default:
+            return 0;
+        }
+      });
     }
   });
-
-  // Filter and sort products
-  const filteredProducts = products
-    .filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = filterCategory === 'all' || product.category === filterCategory;
-      return matchesSearch && matchesCategory;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'price-low':
-          return a.price - b.price;
-        case 'price-high':
-          return b.price - a.price;
-        case 'name':
-          return a.name.localeCompare(b.name);
-        default:
-          return 0;
-      }
-    });
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
+        <VisitorTracker />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">Loading products...</div>
         </div>
@@ -59,42 +58,20 @@ const Products = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead 
-        title="All Products - Athletic Store"
-        description="Discover our complete collection of premium athletic wear and footwear"
-        keywords="athletic wear, shoes, sports, fitness, nike, adidas"
-      />
-      <VisitorTracker />
       <Navigation />
+      <VisitorTracker />
       
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">All Products</h1>
-          <p className="text-muted-foreground">
-            Discover our complete collection of premium athletic wear and footwear
+          <p className="text-muted-foreground mb-6">
+            Discover our complete collection of athletic wear, shoes, and gear
           </p>
-        </div>
 
-        {/* Filters and Search */}
-        <div className="mb-8 space-y-4 lg:space-y-0 lg:flex lg:items-center lg:justify-between">
-          <div className="flex flex-col sm:flex-row gap-4">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            {/* Category Filter */}
-            <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Category" />
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
@@ -103,49 +80,47 @@ const Products = () => {
                 <SelectItem value="Outerwear">Outerwear</SelectItem>
               </SelectContent>
             </Select>
+
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="price-low">Price: Low to High</SelectItem>
+                <SelectItem value="price-high">Price: High to Low</SelectItem>
+                <SelectItem value="name">Name A-Z</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Sort */}
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="featured">Featured</SelectItem>
-              <SelectItem value="price-low">Price: Low to High</SelectItem>
-              <SelectItem value="price-high">Price: High to Low</SelectItem>
-              <SelectItem value="name">Name: A to Z</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2 mb-6">
+            <Badge variant="secondary">{products.length} products found</Badge>
+            {categoryFilter !== 'all' && (
+              <Badge variant="outline">Category: {categoryFilter}</Badge>
+            )}
+          </div>
         </div>
 
-        {/* Results Count */}
-        <div className="mb-6">
-          <p className="text-sm text-muted-foreground">
-            Showing {filteredProducts.length} of {products.length} products
-          </p>
-        </div>
-
-        {/* Products Grid - 2 columns on mobile, more on larger screens */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-lg text-muted-foreground mb-4">No products found</p>
-            <Button
-              onClick={() => {
-                setSearchQuery('');
-                setFilterCategory('all');
-              }}
-              variant="outline"
-            >
-              Clear Filters
-            </Button>
+        {products.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-16">
+              <p className="text-lg text-muted-foreground mb-4">
+                No products found matching your criteria
+              </p>
+              <Button onClick={() => {
+                setCategoryFilter('all');
+                setSortBy('newest');
+              }}>
+                Clear Filters
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
           </div>
         )}
       </div>
