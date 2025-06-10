@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import ProductCard from '@/components/ProductCard';
+import SEOHead from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -10,88 +11,111 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Heart, ShoppingCart, Phone, MessageCircle, Minus, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  image: string;
+  images?: string[];
+  category: string;
+  isNew?: boolean;
+  inStock: boolean;
+  description: string;
+  sizes?: string[];
+  colors?: string[];
+  features?: string[];
+  brand?: string;
+  stock?: number;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
+}
+
 const ProductDetail = () => {
   const { id } = useParams();
+  const [product, setProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Mock product data - in real app, fetch based on id
-  const product = {
-    id: '1',
-    name: 'Air Jordan 4 Retro "Bred"',
-    price: 3400, // Changed to EGP
-    originalPrice: 4250,
-    image: '/lovable-uploads/9b98bff4-8569-4533-8eb7-e7a12673afc3.png',
-    category: 'Shoes',
-    isNew: true,
-    inStock: true,
-    description: 'The Air Jordan 4 Retro "Bred" brings back the iconic colorway from 1989. Featuring premium leather upper with mesh panels, visible Air cushioning, and the classic Jordan 4 silhouette.',
-    sizes: ['7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '11.5', '12'],
-    features: [
-      'Premium leather and mesh upper',
-      'Air cushioning in heel and forefoot',
-      'Rubber outsole with herringbone pattern',
-      'Iconic Flight logo on tongue'
-    ],
-    shipping: {
-      standard: '3-5 business days - Free',
-      express: '1-2 business days - 100 L.E'
-    }
-  };
-
-  // Related products
-  const relatedProducts = [
+  // Default products for fallback
+  const defaultProducts = [
     {
-      id: '3',
-      name: 'Air Jordan 1 "University Blue"',
-      price: 2890,
-      image: '/lovable-uploads/89e48b84-0586-4e14-b4e5-d11b38b4962c.png',
+      id: '1',
+      name: 'Air Jordan 4 Retro "Bred"',
+      price: 3400,
+      originalPrice: 4250,
+      image: '/lovable-uploads/9b98bff4-8569-4533-8eb7-e7a12673afc3.png',
       category: 'Shoes',
-      inStock: true
-    },
-    {
-      id: '4',
-      name: 'Yeezy Boost 350 V2 "Cream"',
-      price: 3740,
-      image: '/lovable-uploads/70691133-4b92-4f11-ae0e-8c73f1267caa.png',
-      category: 'Shoes',
-      inStock: true
-    },
-    {
-      id: '5',
-      name: 'Air Jordan 4 "White Cement"',
-      price: 3570,
-      image: '/lovable-uploads/1ca03270-8496-4b5d-aa10-394359a7f5f5.png',
-      category: 'Shoes',
-      inStock: true
+      isNew: true,
+      inStock: true,
+      description: 'The Air Jordan 4 Retro "Bred" brings back the iconic colorway from 1989. Featuring premium leather upper with mesh panels, visible Air cushioning, and the classic Jordan 4 silhouette.',
+      sizes: ['7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '11.5', '12'],
+      colors: ['Black/Red', 'White/Cement'],
+      features: [
+        'Premium leather and mesh upper',
+        'Air cushioning in heel and forefoot',
+        'Rubber outsole with herringbone pattern',
+        'Iconic Flight logo on tongue'
+      ],
+      brand: 'Nike',
+      stock: 25
     }
   ];
 
   useEffect(() => {
-    // Add to recently viewed
-    const viewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
-    const updatedViewed = [product, ...viewed.filter(item => item.id !== product.id)].slice(0, 5);
-    localStorage.setItem('recentlyViewed', JSON.stringify(updatedViewed));
-    setRecentlyViewed(updatedViewed.slice(1)); // Exclude current product
+    // Load product from admin products or defaults
+    const adminProducts = JSON.parse(localStorage.getItem('adminProducts') || '[]');
+    const allProducts = [...defaultProducts, ...adminProducts];
+    
+    const foundProduct = allProducts.find(p => p.id === id);
+    
+    if (foundProduct) {
+      setProduct(foundProduct);
+      
+      // Add to recently viewed
+      const viewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+      const updatedViewed = [foundProduct, ...viewed.filter(item => item.id !== foundProduct.id)].slice(0, 5);
+      localStorage.setItem('recentlyViewed', JSON.stringify(updatedViewed));
+      setRecentlyViewed(updatedViewed.slice(1));
+      
+      // Check if wishlisted
+      const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      setIsWishlisted(wishlist.some(item => item.id === foundProduct.id));
+    }
   }, [id]);
 
   const handleAddToCart = () => {
-    if (!selectedSize) {
+    if (!product) return;
+    
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
       toast.error('Please select a size');
+      return;
+    }
+    
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
+      toast.error('Please select a color');
       return;
     }
     
     const cartItem = {
       ...product,
       size: selectedSize,
+      color: selectedColor,
       quantity: quantity,
       addedAt: new Date().toISOString()
     };
     
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const existingItemIndex = cart.findIndex(item => item.id === product.id && item.size === selectedSize);
+    const existingItemIndex = cart.findIndex(item => 
+      item.id === product.id && 
+      item.size === selectedSize && 
+      item.color === selectedColor
+    );
     
     if (existingItemIndex > -1) {
       cart[existingItemIndex].quantity += quantity;
@@ -100,10 +124,25 @@ const ProductDetail = () => {
     }
     
     localStorage.setItem('cart', JSON.stringify(cart));
+    
+    // Send order notification
+    const notifications = JSON.parse(localStorage.getItem('adminNotifications') || '[]');
+    notifications.unshift({
+      id: Date.now(),
+      type: 'order',
+      productName: product.name,
+      quantity: quantity,
+      timestamp: new Date().toISOString(),
+      read: false
+    });
+    localStorage.setItem('adminNotifications', JSON.stringify(notifications));
+    
     toast.success(`${product.name} added to cart!`);
   };
 
   const handleToggleWishlist = () => {
+    if (!product) return;
+    
     const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
     let updatedWishlist;
     
@@ -119,12 +158,37 @@ const ProductDetail = () => {
     setIsWishlisted(!isWishlisted);
   };
 
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-16 text-center">
+          <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
+          <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist.</p>
+          <Button asChild>
+            <Link to="/products">Browse Products</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const discountPercentage = product.originalPrice 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
+  const productImages = product.images && product.images.length > 0 ? product.images : [product.image];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={product.seoTitle || `${product.name} - Athletic Store`}
+        description={product.seoDescription || product.description}
+        keywords={product.seoKeywords || `${product.category}, ${product.brand}, ${product.name}`.toLowerCase()}
+        image={product.image}
+        type="product"
+      />
+      
       <Navigation />
       
       <div className="container mx-auto px-4 py-8">
@@ -138,15 +202,31 @@ const ProductDetail = () => {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
-          {/* Product Image */}
+          {/* Product Images */}
           <div className="space-y-4">
             <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden">
               <img
-                src={product.image}
+                src={productImages[currentImageIndex]}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
+            
+            {productImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto">
+                {productImages.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentImageIndex(index)}
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
+                      currentImageIndex === index ? 'border-primary' : 'border-gray-200'
+                    }`}
+                  >
+                    <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Details */}
@@ -162,6 +242,10 @@ const ProductDetail = () => {
                 )}
               </div>
               
+              {product.brand && (
+                <p className="text-sm text-muted-foreground mb-2">{product.brand}</p>
+              )}
+              
               <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
               
               <div className="flex items-center gap-3 mb-4">
@@ -176,24 +260,51 @@ const ProductDetail = () => {
               <p className="text-muted-foreground leading-relaxed">
                 {product.description}
               </p>
+              
+              {product.stock !== undefined && (
+                <p className="text-sm text-muted-foreground">
+                  {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                </p>
+              )}
             </div>
 
             {/* Size Selection */}
-            <div className="space-y-3">
-              <label className="text-sm font-medium">Size</label>
-              <Select value={selectedSize} onValueChange={setSelectedSize}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select size" />
-                </SelectTrigger>
-                <SelectContent>
-                  {product.sizes.map((size) => (
-                    <SelectItem key={size} value={size}>
-                      {size}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {product.sizes && product.sizes.length > 0 && (
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Size</label>
+                <Select value={selectedSize} onValueChange={setSelectedSize}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {product.sizes.map((size) => (
+                      <SelectItem key={size} value={size}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Color Selection */}
+            {product.colors && product.colors.length > 0 && (
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Color</label>
+                <Select value={selectedColor} onValueChange={setSelectedColor}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select color" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {product.colors.map((color) => (
+                      <SelectItem key={color} value={color}>
+                        {color}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Quantity */}
             <div className="space-y-3">
@@ -250,38 +361,26 @@ const ProductDetail = () => {
                 WhatsApp
               </Button>
             </div>
-
-            {/* Shipping Info */}
-            <div className="space-y-3">
-              <h3 className="font-medium">Delivery Options</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Standard Delivery:</span>
-                  <span>{product.shipping.standard}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Express Delivery:</span>
-                  <span>{product.shipping.express}</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
-
-        <Separator className="mb-8" />
 
         {/* Product Features */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Product Features</h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            {product.features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-primary rounded-full" />
-                <span>{feature}</span>
+        {product.features && product.features.length > 0 && (
+          <>
+            <Separator className="mb-8" />
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold mb-6">Product Features</h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                {product.features.map((feature, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-primary rounded-full" />
+                    <span>{feature}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
 
         {/* Recently Viewed */}
         {recentlyViewed.length > 0 && (
@@ -297,17 +396,6 @@ const ProductDetail = () => {
             </div>
           </>
         )}
-
-        {/* Related Products */}
-        <Separator className="mb-8" />
-        <div>
-          <h2 className="text-2xl font-bold mb-6">Related Products</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {relatedProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );
