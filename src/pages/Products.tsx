@@ -1,7 +1,11 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import ProductCard from '@/components/ProductCard';
+import VisitorTracker from '@/components/VisitorTracker';
+import SEOHead from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -12,88 +16,18 @@ const Products = () => {
   const [sortBy, setSortBy] = useState('featured');
   const [filterCategory, setFilterCategory] = useState('all');
 
-  // Mock products data using uploaded images
-  const allProducts = [
-    {
-      id: '1',
-      name: 'Air Jordan 4 Retro "Bred"',
-      price: 200,
-      originalPrice: 250,
-      image: '/lovable-uploads/9b98bff4-8569-4533-8eb7-e7a12673afc3.png',
-      category: 'Shoes',
-      isNew: true,
-      inStock: true
-    },
-    {
-      id: '2',
-      name: 'Barcelona Home Jersey 2024',
-      price: 90,
-      image: '/lovable-uploads/0e229d93-8ed2-4475-9fa4-c9dc86c63f76.png',
-      category: 'Athletic Wear',
-      isNew: true,
-      inStock: true
-    },
-    {
-      id: '3',
-      name: 'Air Jordan 1 "University Blue"',
-      price: 170,
-      image: '/lovable-uploads/89e48b84-0586-4e14-b4e5-d11b38b4962c.png',
-      category: 'Shoes',
-      inStock: true
-    },
-    {
-      id: '4',
-      name: 'Yeezy Boost 350 V2 "Cream"',
-      price: 220,
-      image: '/lovable-uploads/70691133-4b92-4f11-ae0e-8c73f1267caa.png',
-      category: 'Shoes',
-      inStock: true
-    },
-    {
-      id: '5',
-      name: 'Air Jordan 4 "White Cement"',
-      price: 210,
-      image: '/lovable-uploads/1ca03270-8496-4b5d-aa10-394359a7f5f5.png',
-      category: 'Shoes',
-      inStock: true
-    },
-    {
-      id: '6',
-      name: 'American Eagle Black Graphic Tee',
-      price: 25,
-      originalPrice: 35,
-      image: '/lovable-uploads/ecebd1a4-2de5-4911-bf69-38697a269054.png',
-      category: 'Outerwear',
-      inStock: true
-    },
-    {
-      id: '7',
-      name: 'American Eagle Olive Graphic Tee',
-      price: 28,
-      image: '/lovable-uploads/775ffd32-b47b-4081-b560-24e17fb8664a.png',
-      category: 'Outerwear',
-      inStock: true
-    },
-    {
-      id: '8',
-      name: 'American Eagle Black Logo Tee',
-      price: 30,
-      image: '/lovable-uploads/de24c74b-91b1-4393-8192-fe7522fa99be.png',
-      category: 'Outerwear',
-      inStock: true
-    },
-    {
-      id: '9',
-      name: 'American Eagle Teal Eagle Tee',
-      price: 26,
-      image: '/lovable-uploads/d7239c31-30da-4311-9456-7f8cdcb03b81.png',
-      category: 'Outerwear',
-      inStock: true
+  // Fetch products from Supabase
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('products').select('*');
+      if (error) throw error;
+      return data;
     }
-  ];
+  });
 
   // Filter and sort products
-  const filteredProducts = allProducts
+  const filteredProducts = products
     .filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = filterCategory === 'all' || product.category === filterCategory;
@@ -112,8 +46,25 @@ const Products = () => {
       }
     });
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Loading products...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title="All Products - Athletic Store"
+        description="Discover our complete collection of premium athletic wear and footwear"
+        keywords="athletic wear, shoes, sports, fitness, nike, adidas"
+      />
+      <VisitorTracker />
       <Navigation />
       
       <div className="container mx-auto px-4 py-8">
@@ -171,12 +122,12 @@ const Products = () => {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
-            Showing {filteredProducts.length} of {allProducts.length} products
+            Showing {filteredProducts.length} of {products.length} products
           </p>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* Products Grid - 2 columns on mobile, more on larger screens */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

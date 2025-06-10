@@ -9,7 +9,167 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      orders: {
+        Row: {
+          created_at: string
+          id: string
+          price: number
+          product_id: string | null
+          product_name: string
+          quantity: number
+          size: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          price: number
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          size?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          price?: number
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          size?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          brand: string | null
+          category: string
+          colors: string[] | null
+          created_at: string
+          description: string | null
+          features: string[] | null
+          id: string
+          images: string[] | null
+          is_new: boolean | null
+          name: string
+          original_price: number | null
+          price: number
+          seo_description: string | null
+          seo_keywords: string | null
+          seo_title: string | null
+          sizes: string[] | null
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          category: string
+          colors?: string[] | null
+          created_at?: string
+          description?: string | null
+          features?: string[] | null
+          id?: string
+          images?: string[] | null
+          is_new?: boolean | null
+          name: string
+          original_price?: number | null
+          price: number
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          sizes?: string[] | null
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          category?: string
+          colors?: string[] | null
+          created_at?: string
+          description?: string | null
+          features?: string[] | null
+          id?: string
+          images?: string[] | null
+          is_new?: boolean | null
+          name?: string
+          original_price?: number | null
+          price?: number
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          sizes?: string[] | null
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+        }
+        Relationships: []
+      }
+      website_analytics: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          page_path: string
+          session_id: string | null
+          user_agent: string | null
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          page_path: string
+          session_id?: string | null
+          user_agent?: string | null
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          page_path?: string
+          session_id?: string | null
+          user_agent?: string | null
+          visitor_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
