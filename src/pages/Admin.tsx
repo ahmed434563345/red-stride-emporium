@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
@@ -9,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit, Trash2, Users, ShoppingBag, DollarSign, TrendingUp, LogOut, Package, BarChart3, Calendar } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, ShoppingBag, DollarSign, TrendingUp, LogOut, Package, BarChart3, Calendar, Image } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line } from 'recharts';
@@ -18,41 +19,22 @@ const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [orders, setOrders] = useState([]);
-  const [products, setProducts] = useState([
-    {
-      id: '1',
-      name: 'Air Jordan 4 Retro "Bred"',
-      price: 200,
-      category: 'Shoes',
-      stock: 15,
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'Barcelona Home Jersey 2024',
-      price: 90,
-      category: 'Athletic Wear',
-      stock: 8,
-      status: 'active'
-    },
-    {
-      id: '3',
-      name: 'Air Jordan 1 "University Blue"',
-      price: 170,
-      category: 'Shoes',
-      stock: 0,
-      status: 'out_of_stock'
-    }
-  ]);
+  const [products, setProducts] = useState([]);
   const [newProduct, setNewProduct] = useState({
     name: '',
     price: '',
+    originalPrice: '',
     category: '',
     description: '',
     stock: '',
-    image: ''
+    image: '',
+    sizes: [] as string[],
+    colors: [] as string[],
+    isNew: false
   });
   const [editingProduct, setEditingProduct] = useState(null);
+  const [newSize, setNewSize] = useState('');
+  const [newColor, setNewColor] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,9 +44,11 @@ const Admin = () => {
     
     if (isAuth && user.isAdmin) {
       setIsAuthenticated(true);
-      // Load admin orders
+      // Load admin orders and products
       const adminOrders = JSON.parse(localStorage.getItem('adminOrders') || '[]');
+      const storedProducts = JSON.parse(localStorage.getItem('adminProducts') || '[]');
       setOrders(adminOrders);
+      setProducts(storedProducts);
     }
   }, []);
 
@@ -84,9 +68,11 @@ const Admin = () => {
       localStorage.setItem('isAuthenticated', 'true');
       toast.success('Admin login successful!');
       
-      // Load admin orders after login
+      // Load admin data after login
       const adminOrders = JSON.parse(localStorage.getItem('adminOrders') || '[]');
+      const storedProducts = JSON.parse(localStorage.getItem('adminProducts') || '[]');
       setOrders(adminOrders);
+      setProducts(storedProducts);
     } else {
       toast.error('Invalid credentials');
     }
@@ -100,43 +86,82 @@ const Admin = () => {
     navigate('/');
   };
 
+  const handleAddSize = () => {
+    if (newSize && !newProduct.sizes.includes(newSize)) {
+      setNewProduct(prev => ({
+        ...prev,
+        sizes: [...prev.sizes, newSize]
+      }));
+      setNewSize('');
+    }
+  };
+
+  const handleRemoveSize = (size: string) => {
+    setNewProduct(prev => ({
+      ...prev,
+      sizes: prev.sizes.filter(s => s !== size)
+    }));
+  };
+
+  const handleAddColor = () => {
+    if (newColor && !newProduct.colors.includes(newColor)) {
+      setNewProduct(prev => ({
+        ...prev,
+        colors: [...prev.colors, newColor]
+      }));
+      setNewColor('');
+    }
+  };
+
+  const handleRemoveColor = (color: string) => {
+    setNewProduct(prev => ({
+      ...prev,
+      colors: prev.colors.filter(c => c !== color)
+    }));
+  };
+
   const handleEditProduct = (product) => {
     setEditingProduct(product);
     setNewProduct({
       name: product.name,
       price: product.price.toString(),
+      originalPrice: product.originalPrice?.toString() || '',
       category: product.category,
-      description: '',
+      description: product.description || '',
       stock: product.stock.toString(),
-      image: ''
+      image: product.image,
+      sizes: product.sizes || [],
+      colors: product.colors || [],
+      isNew: product.isNew || false
     });
   };
 
   const handleUpdateProduct = () => {
     if (!editingProduct) return;
     
+    const updatedProduct = {
+      ...editingProduct,
+      name: newProduct.name,
+      price: parseFloat(newProduct.price),
+      originalPrice: newProduct.originalPrice ? parseFloat(newProduct.originalPrice) : undefined,
+      category: newProduct.category,
+      description: newProduct.description,
+      stock: parseInt(newProduct.stock) || 0,
+      image: newProduct.image,
+      sizes: newProduct.sizes,
+      colors: newProduct.colors,
+      isNew: newProduct.isNew,
+      inStock: parseInt(newProduct.stock) > 0
+    };
+    
     const updatedProducts = products.map(p => 
-      p.id === editingProduct.id 
-        ? {
-            ...p,
-            name: newProduct.name,
-            price: parseFloat(newProduct.price),
-            category: newProduct.category,
-            stock: parseInt(newProduct.stock) || 0
-          }
-        : p
+      p.id === editingProduct.id ? updatedProduct : p
     );
     
     setProducts(updatedProducts);
+    localStorage.setItem('adminProducts', JSON.stringify(updatedProducts));
     setEditingProduct(null);
-    setNewProduct({
-      name: '',
-      price: '',
-      category: '',
-      description: '',
-      stock: '',
-      image: ''
-    });
+    resetForm();
     toast.success('Product updated successfully!');
   };
 
@@ -150,26 +175,44 @@ const Admin = () => {
       id: Date.now().toString(),
       name: newProduct.name,
       price: parseFloat(newProduct.price),
+      originalPrice: newProduct.originalPrice ? parseFloat(newProduct.originalPrice) : undefined,
       category: newProduct.category,
+      description: newProduct.description,
       stock: parseInt(newProduct.stock) || 0,
-      status: 'active'
+      image: newProduct.image || '/placeholder.svg',
+      sizes: newProduct.sizes,
+      colors: newProduct.colors,
+      isNew: newProduct.isNew,
+      inStock: parseInt(newProduct.stock) > 0
     };
 
-    setProducts([...products, product]);
-    setNewProduct({
-      name: '',
-      price: '',
-      category: '',
-      description: '',
-      stock: '',
-      image: ''
-    });
+    const updatedProducts = [...products, product];
+    setProducts(updatedProducts);
+    localStorage.setItem('adminProducts', JSON.stringify(updatedProducts));
+    resetForm();
     toast.success('Product added successfully!');
   };
 
   const handleDeleteProduct = (id: string) => {
-    setProducts(products.filter(p => p.id !== id));
+    const updatedProducts = products.filter(p => p.id !== id);
+    setProducts(updatedProducts);
+    localStorage.setItem('adminProducts', JSON.stringify(updatedProducts));
     toast.success('Product deleted successfully!');
+  };
+
+  const resetForm = () => {
+    setNewProduct({
+      name: '',
+      price: '',
+      originalPrice: '',
+      category: '',
+      description: '',
+      stock: '',
+      image: '',
+      sizes: [],
+      colors: [],
+      isNew: false
+    });
   };
 
   // Calculate analytics data
@@ -329,10 +372,6 @@ const Admin = () => {
               <Package className="h-4 w-4" />
               Orders
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Users
-            </TabsTrigger>
           </TabsList>
 
           {/* Analytics Tab */}
@@ -430,15 +469,36 @@ const Admin = () => {
                 <div className="space-y-4">
                   {products.map((product) => (
                     <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{product.name}</h3>
-                        <div className="flex items-center gap-4 mt-1">
-                          <span className="text-sm text-muted-foreground">${product.price}</span>
-                          <Badge variant="secondary">{product.category}</Badge>
-                          <span className="text-sm text-muted-foreground">Stock: {product.stock}</span>
-                          <Badge variant={product.status === 'active' ? 'default' : 'destructive'}>
-                            {product.status === 'active' ? 'Active' : 'Out of Stock'}
-                          </Badge>
+                      <div className="flex items-center gap-4">
+                        <img 
+                          src={product.image} 
+                          alt={product.name}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <h3 className="font-semibold">{product.name}</h3>
+                          <div className="flex items-center gap-4 mt-1">
+                            <span className="text-sm text-muted-foreground">{product.price} L.E</span>
+                            <Badge variant="secondary">{product.category}</Badge>
+                            <span className="text-sm text-muted-foreground">Stock: {product.stock}</span>
+                            {product.isNew && <Badge className="athletic-gradient border-0 text-white">NEW</Badge>}
+                          </div>
+                          {product.sizes.length > 0 && (
+                            <div className="flex gap-1 mt-1">
+                              <span className="text-xs text-muted-foreground">Sizes:</span>
+                              {product.sizes.map(size => (
+                                <Badge key={size} variant="outline" className="text-xs">{size}</Badge>
+                              ))}
+                            </div>
+                          )}
+                          {product.colors.length > 0 && (
+                            <div className="flex gap-1 mt-1">
+                              <span className="text-xs text-muted-foreground">Colors:</span>
+                              {product.colors.map(color => (
+                                <Badge key={color} variant="outline" className="text-xs">{color}</Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -474,7 +534,7 @@ const Admin = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="name">Product Name *</Label>
@@ -486,15 +546,27 @@ const Admin = () => {
                       />
                     </div>
 
-                    <div>
-                      <Label htmlFor="price">Price *</Label>
-                      <Input
-                        id="price"
-                        type="number"
-                        value={newProduct.price}
-                        onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
-                        placeholder="0.00"
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="price">Price *</Label>
+                        <Input
+                          id="price"
+                          type="number"
+                          value={newProduct.price}
+                          onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="originalPrice">Original Price</Label>
+                        <Input
+                          id="originalPrice"
+                          type="number"
+                          value={newProduct.originalPrice}
+                          onChange={(e) => setNewProduct({...newProduct, originalPrice: e.target.value})}
+                          placeholder="0.00"
+                        />
+                      </div>
                     </div>
 
                     <div>
@@ -521,17 +593,74 @@ const Admin = () => {
                         placeholder="0"
                       />
                     </div>
+
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="isNew"
+                        checked={newProduct.isNew}
+                        onChange={(e) => setNewProduct({...newProduct, isNew: e.target.checked})}
+                      />
+                      <Label htmlFor="isNew">Mark as New Product</Label>
+                    </div>
                   </div>
 
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="image">Image URL</Label>
-                      <Input
-                        id="image"
-                        value={newProduct.image}
-                        onChange={(e) => setNewProduct({...newProduct, image: e.target.value})}
-                        placeholder="https://..."
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          id="image"
+                          value={newProduct.image}
+                          onChange={(e) => setNewProduct({...newProduct, image: e.target.value})}
+                          placeholder="https://... or /path/to/image"
+                        />
+                        <Button variant="outline" size="icon">
+                          <Image className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>Sizes</Label>
+                      <div className="flex gap-2 mb-2">
+                        <Input
+                          value={newSize}
+                          onChange={(e) => setNewSize(e.target.value)}
+                          placeholder="Add size (e.g., XS, S, M, L, XL)"
+                        />
+                        <Button type="button" onClick={handleAddSize} variant="outline">
+                          Add
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {newProduct.sizes.map(size => (
+                          <Badge key={size} variant="secondary" className="cursor-pointer" onClick={() => handleRemoveSize(size)}>
+                            {size} ×
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>Colors</Label>
+                      <div className="flex gap-2 mb-2">
+                        <Input
+                          value={newColor}
+                          onChange={(e) => setNewColor(e.target.value)}
+                          placeholder="Add color (e.g., Red, Blue, Black)"
+                        />
+                        <Button type="button" onClick={handleAddColor} variant="outline">
+                          Add
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {newProduct.colors.map(color => (
+                          <Badge key={color} variant="secondary" className="cursor-pointer" onClick={() => handleRemoveColor(color)}>
+                            {color} ×
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
 
                     <div>
@@ -547,46 +676,29 @@ const Admin = () => {
                   </div>
                 </div>
 
-                <Button 
-                  onClick={editingProduct ? handleUpdateProduct : handleAddProduct}
-                  className="mt-6 athletic-gradient"
-                  size="lg"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {editingProduct ? 'Update Product' : 'Add Product'}
-                </Button>
-                
-                {editingProduct && (
+                <div className="flex gap-4 mt-6">
                   <Button 
-                    onClick={() => {
-                      setEditingProduct(null);
-                      setNewProduct({
-                        name: '',
-                        price: '',
-                        category: '',
-                        description: '',
-                        stock: '',
-                        image: ''
-                      });
-                    }}
-                    variant="outline"
-                    className="mt-2 ml-4"
+                    onClick={editingProduct ? handleUpdateProduct : handleAddProduct}
+                    className="athletic-gradient"
+                    size="lg"
                   >
-                    Cancel Edit
+                    <Plus className="mr-2 h-4 w-4" />
+                    {editingProduct ? 'Update Product' : 'Add Product'}
                   </Button>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Users Tab */}
-          <TabsContent value="users">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">User management features coming soon...</p>
+                  
+                  {editingProduct && (
+                    <Button 
+                      onClick={() => {
+                        setEditingProduct(null);
+                        resetForm();
+                      }}
+                      variant="outline"
+                      size="lg"
+                    >
+                      Cancel Edit
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

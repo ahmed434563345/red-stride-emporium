@@ -19,10 +19,11 @@ const Navigation = () => {
       const cart = JSON.parse(localStorage.getItem('cart') || '[]');
       const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
       const userData = localStorage.getItem('user');
+      const isAuth = localStorage.getItem('isAuthenticated') === 'true';
       
       setCartItems(cart.length);
       setWishlistItems(wishlist.length);
-      setUser(userData ? JSON.parse(userData) : null);
+      setUser(userData && isAuth ? JSON.parse(userData) : null);
     };
 
     updateCounts();
@@ -53,8 +54,7 @@ const Navigation = () => {
 
   const handleSignOut = () => {
     localStorage.removeItem('user');
-    localStorage.removeItem('cart');
-    localStorage.removeItem('wishlist');
+    localStorage.removeItem('isAuthenticated');
     setUser(null);
     setCartItems(0);
     setWishlistItems(0);
@@ -115,7 +115,7 @@ const Navigation = () => {
                   </Button>
                 </Link>
 
-                {user.email === 'admin@athletic.com' ? (
+                {user.isAdmin ? (
                   <Link to="/admin">
                     <Button variant="ghost" size="icon" title="Admin Panel">
                       <Shield className="h-4 w-4" />

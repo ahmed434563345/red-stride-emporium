@@ -40,7 +40,7 @@ const SignIn = () => {
       id: '1',
       email: formData.email,
       name: formData.email.split('@')[0],
-      isAdmin: formData.email === 'admin@admin.com'
+      isAdmin: formData.email === 'admin@admin.com' || formData.email === 'admin@athletic.com'
     };
 
     localStorage.setItem('user', JSON.stringify(user));
@@ -48,7 +48,13 @@ const SignIn = () => {
     
     setIsLoading(false);
     toast.success('Welcome back!');
-    navigate('/');
+    
+    // Redirect to admin if admin user
+    if (user.isAdmin) {
+      navigate('/admin');
+    } else {
+      navigate('/');
+    }
   };
 
   return (
