@@ -13,11 +13,12 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  originalPrice?: number;
+  original_price?: number;
   image: string;
   category: string;
-  isNew?: boolean;
-  inStock: boolean;
+  stock: number;
+  is_new?: boolean;
+  brand?: string;
 }
 
 const Search = () => {
@@ -35,11 +36,12 @@ const Search = () => {
       id: '1',
       name: 'Air Jordan 4 Retro "Bred"',
       price: 3400,
-      originalPrice: 4000,
+      original_price: 4000,
       image: '/lovable-uploads/9b98bff4-8569-4533-8eb7-e7a12673afc3.png',
       category: 'Shoes',
-      isNew: true,
-      inStock: true
+      stock: 15,
+      is_new: true,
+      brand: 'Jordan'
     },
     {
       id: '2',
@@ -47,7 +49,8 @@ const Search = () => {
       price: 1530,
       image: '/lovable-uploads/0e229d93-8ed2-4475-9fa4-c9dc86c63f76.png',
       category: 'Athletic Wear',
-      inStock: true
+      stock: 25,
+      brand: 'Nike'
     },
     {
       id: '3',
@@ -55,7 +58,8 @@ const Search = () => {
       price: 425,
       image: '/lovable-uploads/ecebd1a4-2de5-4911-bf69-38697a269054.png',
       category: 'Athletic Wear',
-      inStock: true
+      stock: 30,
+      brand: 'American Eagle'
     },
     {
       id: '4',
@@ -63,7 +67,8 @@ const Search = () => {
       price: 2890,
       image: '/lovable-uploads/70691133-4b92-4f11-ae0e-8c73f1267caa.png',
       category: 'Shoes',
-      inStock: false
+      stock: 0,
+      brand: 'Jordan'
     }
   ];
 

@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,11 +11,12 @@ const Index = () => {
       id: '1',
       name: 'Air Jordan 4 Retro "Bred"',
       price: 200,
-      originalPrice: 250,
+      original_price: 250,
       image: '/lovable-uploads/9b98bff4-8569-4533-8eb7-e7a12673afc3.png',
       category: 'Shoes',
-      isNew: true,
-      inStock: true
+      stock: 15,
+      is_new: true,
+      brand: 'Jordan'
     },
     {
       id: '3',
@@ -24,7 +24,8 @@ const Index = () => {
       price: 170,
       image: '/lovable-uploads/89e48b84-0586-4e14-b4e5-d11b38b4962c.png',
       category: 'Shoes',
-      inStock: true
+      stock: 12,
+      brand: 'Jordan'
     },
     {
       id: '4',
@@ -32,7 +33,8 @@ const Index = () => {
       price: 220,
       image: '/lovable-uploads/70691133-4b92-4f11-ae0e-8c73f1267caa.png',
       category: 'Shoes',
-      inStock: true
+      stock: 8,
+      brand: 'Adidas'
     },
     {
       id: '5',
@@ -40,7 +42,8 @@ const Index = () => {
       price: 210,
       image: '/lovable-uploads/1ca03270-8496-4b5d-aa10-394359a7f5f5.png',
       category: 'Shoes',
-      inStock: true
+      stock: 20,
+      brand: 'Jordan'
     }
   ];
 
@@ -51,8 +54,9 @@ const Index = () => {
       price: 90,
       image: '/lovable-uploads/0e229d93-8ed2-4475-9fa4-c9dc86c63f76.png',
       category: 'Athletic Wear',
-      isNew: true,
-      inStock: true
+      stock: 25,
+      is_new: true,
+      brand: 'Nike'
     },
     {
       id: '6',
@@ -60,7 +64,8 @@ const Index = () => {
       price: 45,
       image: '/lovable-uploads/0e229d93-8ed2-4475-9fa4-c9dc86c63f76.png',
       category: 'Athletic Wear',
-      inStock: true
+      stock: 30,
+      brand: 'Nike'
     },
     {
       id: '10',
@@ -68,7 +73,8 @@ const Index = () => {
       price: 35,
       image: '/lovable-uploads/0e229d93-8ed2-4475-9fa4-c9dc86c63f76.png',
       category: 'Athletic Wear',
-      inStock: true
+      stock: 18,
+      brand: 'Adidas'
     },
     {
       id: '11',
@@ -76,7 +82,8 @@ const Index = () => {
       price: 55,
       image: '/lovable-uploads/0e229d93-8ed2-4475-9fa4-c9dc86c63f76.png',
       category: 'Athletic Wear',
-      inStock: true
+      stock: 22,
+      brand: 'Under Armour'
     }
   ];
 
@@ -87,7 +94,8 @@ const Index = () => {
       price: 28,
       image: '/lovable-uploads/775ffd32-b47b-4081-b560-24e17fb8664a.png',
       category: 'Outerwear',
-      inStock: true
+      stock: 35,
+      brand: 'American Eagle'
     },
     {
       id: '9',
@@ -95,7 +103,8 @@ const Index = () => {
       price: 26,
       image: '/lovable-uploads/d7239c31-30da-4311-9456-7f8cdcb03b81.png',
       category: 'Outerwear',
-      inStock: true
+      stock: 28,
+      brand: 'American Eagle'
     },
     {
       id: '12',
@@ -103,7 +112,8 @@ const Index = () => {
       price: 85,
       image: '/lovable-uploads/775ffd32-b47b-4081-b560-24e17fb8664a.png',
       category: 'Outerwear',
-      inStock: true
+      stock: 16,
+      brand: 'Nike'
     },
     {
       id: '13',
@@ -111,7 +121,8 @@ const Index = () => {
       price: 75,
       image: '/lovable-uploads/775ffd32-b47b-4081-b560-24e17fb8664a.png',
       category: 'Outerwear',
-      inStock: true
+      stock: 14,
+      brand: 'Adidas'
     }
   ];
 
