@@ -1,400 +1,267 @@
 
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
-import ProductCard from '@/components/ProductCard';
-import SEOHead from '@/components/SEOHead';
+import RelatedProductsSection from '@/components/RelatedProductsSection';
+import ProductSearchBar from '@/components/ProductSearchBar';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Heart, ShoppingCart, Phone, MessageCircle, Minus, Plus } from 'lucide-react';
+import { Heart, ShoppingCart, Star, Truck, Shield, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  images?: string[];
-  category: string;
-  isNew?: boolean;
-  inStock: boolean;
-  description: string;
-  sizes?: string[];
-  colors?: string[];
-  features?: string[];
-  brand?: string;
-  stock?: number;
-  seoTitle?: string;
-  seoDescription?: string;
-  seoKeywords?: string;
-}
+import { useState } from 'react';
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const [product, setProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
-  const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [recentlyViewed, setRecentlyViewed] = useState([]);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Default products for fallback
-  const defaultProducts = [
-    {
-      id: '1',
-      name: 'Air Jordan 4 Retro "Bred"',
-      price: 3400,
-      originalPrice: 4250,
-      image: '/lovable-uploads/9b98bff4-8569-4533-8eb7-e7a12673afc3.png',
-      category: 'Shoes',
-      isNew: true,
-      inStock: true,
-      description: 'The Air Jordan 4 Retro "Bred" brings back the iconic colorway from 1989. Featuring premium leather upper with mesh panels, visible Air cushioning, and the classic Jordan 4 silhouette.',
-      sizes: ['7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '11.5', '12'],
-      colors: ['Black/Red', 'White/Cement'],
-      features: [
-        'Premium leather and mesh upper',
-        'Air cushioning in heel and forefoot',
-        'Rubber outsole with herringbone pattern',
-        'Iconic Flight logo on tongue'
-      ],
-      brand: 'Nike',
-      stock: 25
-    }
-  ];
-
-  useEffect(() => {
-    // Load product from admin products or defaults
-    const adminProducts = JSON.parse(localStorage.getItem('adminProducts') || '[]');
-    const allProducts = [...defaultProducts, ...adminProducts];
-    
-    const foundProduct = allProducts.find(p => p.id === id);
-    
-    if (foundProduct) {
-      setProduct(foundProduct);
+  const { data: product, isLoading } = useQuery({
+    queryKey: ['product', id],
+    queryFn: async () => {
+      if (!id) throw new Error('Product ID is required');
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
       
-      // Add to recently viewed
-      const viewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
-      const updatedViewed = [foundProduct, ...viewed.filter(item => item.id !== foundProduct.id)].slice(0, 5);
-      localStorage.setItem('recentlyViewed', JSON.stringify(updatedViewed));
-      setRecentlyViewed(updatedViewed.slice(1));
-      
-      // Check if wishlisted
-      const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-      setIsWishlisted(wishlist.some(item => item.id === foundProduct.id));
-    }
-  }, [id]);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id
+  });
 
   const handleAddToCart = () => {
-    if (!product) return;
-    
-    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+    if (product?.sizes && product.sizes.length > 0 && !selectedSize) {
       toast.error('Please select a size');
       return;
     }
     
-    if (product.colors && product.colors.length > 0 && !selectedColor) {
-      toast.error('Please select a color');
-      return;
-    }
-    
-    const cartItem = {
-      ...product,
-      size: selectedSize,
-      color: selectedColor,
-      quantity: quantity,
-      addedAt: new Date().toISOString()
-    };
-    
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const existingItemIndex = cart.findIndex(item => 
-      item.id === product.id && 
-      item.size === selectedSize && 
-      item.color === selectedColor
-    );
-    
-    if (existingItemIndex > -1) {
-      cart[existingItemIndex].quantity += quantity;
-    } else {
-      cart.push(cartItem);
-    }
-    
-    localStorage.setItem('cart', JSON.stringify(cart));
-    
-    // Send order notification
-    const notifications = JSON.parse(localStorage.getItem('adminNotifications') || '[]');
-    notifications.unshift({
-      id: Date.now(),
-      type: 'order',
-      productName: product.name,
-      quantity: quantity,
-      timestamp: new Date().toISOString(),
-      read: false
-    });
-    localStorage.setItem('adminNotifications', JSON.stringify(notifications));
-    
-    toast.success(`${product.name} added to cart!`);
+    // Add to cart logic here
+    toast.success(`${product?.name} added to cart!`);
   };
 
-  const handleToggleWishlist = () => {
-    if (!product) return;
-    
-    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-    let updatedWishlist;
-    
-    if (isWishlisted) {
-      updatedWishlist = wishlist.filter(item => item.id !== product.id);
-      toast.success('Removed from wishlist');
-    } else {
-      updatedWishlist = [...wishlist, product];
-      toast.success('Added to wishlist!');
-    }
-    
-    localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
-    setIsWishlisted(!isWishlisted);
+  const handleAddToWishlist = () => {
+    toast.success(`${product?.name} added to wishlist!`);
   };
 
-  if (!product) {
+  const handleSearch = (query: string) => {
+    window.location.href = `/search?q=${encodeURIComponent(query)}`;
+  };
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-          <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist.</p>
-          <Button asChild>
-            <Link to="/products">Browse Products</Link>
-          </Button>
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="h-96 bg-gray-200 rounded"></div>
+              <div className="space-y-4">
+                <div className="h-8 bg-gray-200 rounded"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  const discountPercentage = product.originalPrice 
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : 0;
-
-  const productImages = product.images && product.images.length > 0 ? product.images : [product.image];
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Product not found</h1>
+            <p className="text-muted-foreground">The product you're looking for doesn't exist.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead
-        title={product.seoTitle || `${product.name} - Athletic Store`}
-        description={product.seoDescription || product.description}
-        keywords={product.seoKeywords || `${product.category}, ${product.brand}, ${product.name}`.toLowerCase()}
-        image={product.image}
-        type="product"
-      />
-      
       <Navigation />
       
       <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
-        <div className="mb-6 text-sm text-muted-foreground">
-          <Link to="/" className="hover:text-primary">Home</Link>
-          <span className="mx-2">/</span>
-          <Link to="/products" className="hover:text-primary">Products</Link>
-          <span className="mx-2">/</span>
-          <span>{product.name}</span>
+        {/* Search Bar */}
+        <div className="mb-8 flex justify-center">
+          <ProductSearchBar onSearch={handleSearch} />
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden">
+            <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
               <img
-                src={productImages[currentImageIndex]}
+                src={product.images?.[0] || '/placeholder.svg'}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
-            
-            {productImages.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto">
-                {productImages.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                      currentImageIndex === index ? 'border-primary' : 'border-gray-200'
-                    }`}
-                  >
-                    <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
-                  </button>
+            {product.images && product.images.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {product.images.slice(1).map((image, index) => (
+                  <div key={index} className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                    <img
+                      src={image}
+                      alt={`${product.name} ${index + 2}`}
+                      className="w-full h-full object-cover cursor-pointer hover:opacity-75 transition-opacity"
+                    />
+                  </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Product Details */}
+          {/* Product Info */}
           <div className="space-y-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Badge variant="secondary">{product.category}</Badge>
-                {product.isNew && (
-                  <Badge className="athletic-gradient border-0 text-white">NEW</Badge>
-                )}
-                {discountPercentage > 0 && (
-                  <Badge variant="destructive">-{discountPercentage}%</Badge>
-                )}
+                {product.brand && <Badge variant="outline">{product.brand}</Badge>}
+                {product.is_new && <Badge className="bg-green-500">New</Badge>}
               </div>
-              
-              {product.brand && (
-                <p className="text-sm text-muted-foreground mb-2">{product.brand}</p>
-              )}
-              
-              <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
-              
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-3xl font-bold text-primary">{product.price} L.E</span>
-                {product.originalPrice && (
+              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <span className="text-sm text-muted-foreground">(4.8)</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-3xl font-bold">{product.price} L.E</span>
+                {product.original_price && (
                   <span className="text-xl text-muted-foreground line-through">
-                    {product.originalPrice} L.E
+                    {product.original_price} L.E
                   </span>
                 )}
               </div>
-
-              <p className="text-muted-foreground leading-relaxed">
-                {product.description}
-              </p>
-              
-              {product.stock !== undefined && (
-                <p className="text-sm text-muted-foreground">
-                  {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
-                </p>
-              )}
             </div>
+
+            {product.description && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Description</h3>
+                <p className="text-muted-foreground">{product.description}</p>
+              </div>
+            )}
 
             {/* Size Selection */}
             {product.sizes && product.sizes.length > 0 && (
-              <div className="space-y-3">
-                <label className="text-sm font-medium">Size</label>
-                <Select value={selectedSize} onValueChange={setSelectedSize}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {product.sizes.map((size) => (
-                      <SelectItem key={size} value={size}>
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Size</h3>
+                <div className="flex gap-2 flex-wrap">
+                  {product.sizes.map((size) => (
+                    <Button
+                      key={size}
+                      variant={selectedSize === size ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedSize(size)}
+                    >
+                      {size}
+                    </Button>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Color Selection */}
             {product.colors && product.colors.length > 0 && (
-              <div className="space-y-3">
-                <label className="text-sm font-medium">Color</label>
-                <Select value={selectedColor} onValueChange={setSelectedColor}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select color" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {product.colors.map((color) => (
-                      <SelectItem key={color} value={color}>
-                        {color}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Color</h3>
+                <div className="flex gap-2 flex-wrap">
+                  {product.colors.map((color) => (
+                    <Button
+                      key={color}
+                      variant={selectedColor === color ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedColor(color)}
+                    >
+                      {color}
+                    </Button>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* Quantity */}
-            <div className="space-y-3">
-              <label className="text-sm font-medium">Quantity</label>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="font-medium min-w-[2rem] text-center">{quantity}</span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setQuantity(quantity + 1)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
+            {/* Features */}
+            {product.features && product.features.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Features</h3>
+                <ul className="space-y-1">
+                  {product.features.map((feature, index) => (
+                    <li key={index} className="text-sm text-muted-foreground flex items-center">
+                      <span className="w-2 h-2 bg-primary rounded-full mr-2"></span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
               </div>
+            )}
+
+            {/* Stock Status */}
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${product.stock > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <span className="text-sm">
+                {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+              </span>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3">
+            <div className="space-y-3">
               <Button
                 onClick={handleAddToCart}
-                disabled={!product.inStock}
-                className="flex-1 athletic-gradient hover:opacity-90"
-                size="lg"
+                disabled={product.stock === 0}
+                className="w-full athletic-gradient text-lg py-6"
               >
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                <ShoppingCart className="mr-2 h-5 w-5" />
+                Add to Cart
               </Button>
-              
               <Button
                 variant="outline"
-                size="lg"
-                onClick={handleToggleWishlist}
-                className={isWishlisted ? 'text-red-500 border-red-500' : ''}
+                onClick={handleAddToWishlist}
+                className="w-full"
               >
-                <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
+                <Heart className="mr-2 h-4 w-4" />
+                Add to Wishlist
               </Button>
             </div>
 
-            {/* Contact Options */}
-            <div className="flex gap-3">
-              <Button variant="outline" className="flex-1">
-                <Phone className="mr-2 h-4 w-4" />
-                Call: +20 123 456 789
-              </Button>
-              <Button variant="outline" className="flex-1">
-                <MessageCircle className="mr-2 h-4 w-4" />
-                WhatsApp
-              </Button>
+            {/* Guarantees */}
+            <div className="grid grid-cols-3 gap-4 pt-6 border-t">
+              <div className="text-center">
+                <Truck className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-xs font-medium">Free Shipping</p>
+                <p className="text-xs text-muted-foreground">On orders over 500 L.E</p>
+              </div>
+              <div className="text-center">
+                <Shield className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-xs font-medium">Authentic</p>
+                <p className="text-xs text-muted-foreground">100% Genuine</p>
+              </div>
+              <div className="text-center">
+                <RotateCcw className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-xs font-medium">Easy Returns</p>
+                <p className="text-xs text-muted-foreground">30-day policy</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Product Features */}
-        {product.features && product.features.length > 0 && (
-          <>
-            <Separator className="mb-8" />
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold mb-6">Product Features</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                {product.features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-primary rounded-full" />
-                    <span>{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Recently Viewed */}
-        {recentlyViewed.length > 0 && (
-          <>
-            <Separator className="mb-8" />
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold mb-6">Recently Viewed</h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {recentlyViewed.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            </div>
-          </>
+        {/* Related Products */}
+        {product.category && (
+          <RelatedProductsSection 
+            currentProductId={product.id} 
+            category={product.category} 
+          />
         )}
       </div>
     </div>

@@ -16,40 +16,64 @@ const AdminDashboard = () => {
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
 
-  // Fetch products
+  // Fetch products from Supabase
   const { data: products = [] } = useQuery({
     queryKey: ['admin-products'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (error) throw error;
       return data;
     }
   });
 
-  // Fetch orders
+  // Fetch orders from Supabase
   const { data: orders = [] } = useQuery({
     queryKey: ['admin-orders'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (error) throw error;
       return data;
     }
   });
 
-  // Fetch analytics
+  // Fetch analytics from Supabase
   const { data: analytics = [] } = useQuery({
     queryKey: ['website-analytics'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('website_analytics').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('website_analytics')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (error) throw error;
       return data;
+    }
+  });
+
+  // Fetch user profiles count
+  const { data: usersCount = 0 } = useQuery({
+    queryKey: ['users-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      if (error) throw error;
+      return count || 0;
     }
   });
 
   // Update product mutation
   const updateProductMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
-      const { error } = await supabase.from('products').update(updates).eq('id', id);
+      const { error } = await supabase
+        .from('products')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -65,7 +89,10 @@ const AdminDashboard = () => {
   // Update order mutation
   const updateOrderMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from('orders').update({ status }).eq('id', id);
+      const { error } = await supabase
+        .from('orders')
+        .update({ status })
+        .eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -131,11 +158,11 @@ const AdminDashboard = () => {
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unique Visitors</CardTitle>
+            <CardTitle className="text-sm font-medium">Registered Users</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{uniqueVisitors}</div>
+            <div className="text-2xl font-bold">{usersCount}</div>
           </CardContent>
         </Card>
         
@@ -197,7 +224,7 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Editable Products Table */}
+      {/* Products Management */}
       <Card>
         <CardHeader>
           <CardTitle>Products Management</CardTitle>
@@ -234,7 +261,7 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Editable Orders Table */}
+      {/* Orders Management */}
       <Card>
         <CardHeader>
           <CardTitle>Orders Management</CardTitle>

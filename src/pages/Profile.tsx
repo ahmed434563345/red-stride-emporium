@@ -1,57 +1,113 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
+import StoreProfile from '@/components/StoreProfile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { User, Settings, ShoppingBag, Heart, LogOut } from 'lucide-react';
+import { User, Settings, ShoppingBag, Heart, LogOut, Store } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
-  const [orderHistory, setOrderHistory] = useState([]);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
+  // Get current user
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    
-    if (!userData || !isAuthenticated) {
-      navigate('/signin');
-      return;
-    }
-
-    setUser(JSON.parse(userData));
-    
-    // Mock order history
-    const mockOrders = [
-      {
-        id: 'ORD-001',
-        date: '2024-06-01',
-        status: 'Delivered',
-        total: 3400,
-        items: ['Air Jordan 4 Retro "Bred"']
-      },
-      {
-        id: 'ORD-002',
-        date: '2024-06-05',
-        status: 'Processing',
-        total: 1530,
-        items: ['Barcelona Home Jersey 2024']
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/signin');
+        return;
       }
-    ];
-    setOrderHistory(mockOrders);
+      setUser(user);
+    };
+    getUser();
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAuthenticated');
+  // Fetch user profile
+  const { data: profile } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+    enabled: !!user?.id
+  });
+
+  // Fetch user orders
+  const { data: orders = [] } = useQuery({
+    queryKey: ['user-orders', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id
+  });
+
+  // Update profile mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (profileData: any) => {
+      if (!user?.id) throw new Error('No user found');
+      
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          ...profileData,
+          updated_at: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      toast.success('Profile updated successfully!');
+    },
+    onError: (error) => {
+      toast.error('Failed to update profile: ' + error.message);
+    }
+  });
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/signin');
     toast.success('Logged out successfully');
-    navigate('/');
+  };
+
+  const handleUpdateProfile = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const profileData = {
+      email: user?.email,
+      first_name: formData.get('first_name'),
+      last_name: formData.get('last_name'),
+      phone: formData.get('phone'),
+      address: formData.get('address'),
+      city: formData.get('city')
+    };
+    updateProfileMutation.mutate(profileData);
   };
 
   if (!user) return null;
@@ -67,7 +123,7 @@ const Profile = () => {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               Profile
@@ -80,6 +136,10 @@ const Profile = () => {
               <Heart className="h-4 w-4" />
               Wishlist
             </TabsTrigger>
+            <TabsTrigger value="store" className="flex items-center gap-2">
+              <Store className="h-4 w-4" />
+              Store Info
+            </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Settings
@@ -91,18 +151,66 @@ const Profile = () => {
               <CardHeader>
                 <CardTitle>Profile Information</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" value={user.name} />
+              <CardContent>
+                <form onSubmit={handleUpdateProfile} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="first_name">First Name</Label>
+                      <Input 
+                        id="first_name" 
+                        name="first_name"
+                        defaultValue={profile?.first_name || ''} 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="last_name">Last Name</Label>
+                      <Input 
+                        id="last_name" 
+                        name="last_name"
+                        defaultValue={profile?.last_name || ''} 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input 
+                        id="email" 
+                        value={user.email || ''} 
+                        disabled 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input 
+                        id="phone" 
+                        name="phone"
+                        defaultValue={profile?.phone || ''} 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="address">Address</Label>
+                      <Input 
+                        id="address" 
+                        name="address"
+                        defaultValue={profile?.address || ''} 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="city">City</Label>
+                      <Input 
+                        id="city" 
+                        name="city"
+                        defaultValue={profile?.city || ''} 
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" value={user.email} disabled />
-                  </div>
-                </div>
-                <Button className="athletic-gradient">Update Profile</Button>
+                  <Button 
+                    type="submit" 
+                    className="athletic-gradient"
+                    disabled={updateProfileMutation.isPending}
+                  >
+                    {updateProfileMutation.isPending ? 'Updating...' : 'Update Profile'}
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </TabsContent>
@@ -114,21 +222,29 @@ const Profile = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {orderHistory.map((order) => (
-                    <div key={order.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-semibold">Order {order.id}</h3>
-                          <p className="text-sm text-muted-foreground">{order.date}</p>
+                  {orders.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">No orders found</p>
+                  ) : (
+                    orders.map((order) => (
+                      <div key={order.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h3 className="font-semibold">Order #{order.id.slice(0, 8)}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
+                            {order.status}
+                          </Badge>
                         </div>
-                        <Badge variant={order.status === 'Delivered' ? 'default' : 'secondary'}>
-                          {order.status}
-                        </Badge>
+                        <p className="text-sm mb-2">Product: {order.product_name}</p>
+                        <p className="text-sm mb-2">Quantity: {order.quantity}</p>
+                        {order.size && <p className="text-sm mb-2">Size: {order.size}</p>}
+                        <p className="font-semibold">Total: {order.price * order.quantity} L.E</p>
                       </div>
-                      <p className="text-sm mb-2">Items: {order.items.join(', ')}</p>
-                      <p className="font-semibold">Total: {order.total} L.E</p>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -143,6 +259,12 @@ const Profile = () => {
                 <p className="text-muted-foreground">Your wishlist items will appear here</p>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="store">
+            <div className="flex justify-center">
+              <StoreProfile />
+            </div>
           </TabsContent>
 
           <TabsContent value="settings">
