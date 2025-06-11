@@ -14,6 +14,17 @@ import { Badge } from '@/components/ui/badge';
 import { User, Settings, ShoppingBag, Heart, LogOut, Store } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface ProfileData {
+  id: string;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  created_at: string;
+}
+
 const Profile = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
@@ -35,7 +46,7 @@ const Profile = () => {
   // Fetch user profile
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<ProfileData | null> => {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from('profiles')
@@ -44,7 +55,7 @@ const Profile = () => {
         .single();
       
       if (error && error.code !== 'PGRST116') throw error;
-      return data;
+      return data as ProfileData;
     },
     enabled: !!user?.id
   });
