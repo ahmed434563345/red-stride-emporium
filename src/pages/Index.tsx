@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
@@ -99,24 +100,24 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Shop by Category - Made Smaller */}
-      <section className="py-12 bg-gray-50">
+      {/* Shop by Category */}
+      <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold mb-3">Shop by Category</h2>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Shop by Category</h2>
             <p className="text-muted-foreground">Find exactly what you're looking for</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
             <Link to="/shoes" className="group">
               <Card className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4">
+                <CardContent className="p-6">
                   <div className="text-center">
-                    <div className="athletic-gradient h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-white font-bold">👟</span>
+                    <div className="athletic-gradient h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-white text-2xl">👟</span>
                     </div>
-                    <h3 className="text-lg font-semibold mb-2">Shoes</h3>
-                    <p className="text-sm text-muted-foreground">Sneakers, Running, Basketball</p>
+                    <h3 className="text-xl font-semibold mb-2">Shoes</h3>
+                    <p className="text-muted-foreground">Sneakers, Running, Basketball</p>
                   </div>
                 </CardContent>
               </Card>
@@ -124,13 +125,13 @@ const Index = () => {
             
             <Link to="/athletic-wear" className="group">
               <Card className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4">
+                <CardContent className="p-6">
                   <div className="text-center">
-                    <div className="athletic-gradient h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-white font-bold">👕</span>
+                    <div className="athletic-gradient h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-white text-2xl">👕</span>
                     </div>
-                    <h3 className="text-lg font-semibold mb-2">Athletic Wear</h3>
-                    <p className="text-sm text-muted-foreground">Jerseys, T-shirts, Shorts</p>
+                    <h3 className="text-xl font-semibold mb-2">Athletic Wear</h3>
+                    <p className="text-muted-foreground">Jerseys, T-shirts, Shorts, Pants</p>
                   </div>
                 </CardContent>
               </Card>
@@ -138,13 +139,13 @@ const Index = () => {
             
             <Link to="/outerwear" className="group">
               <Card className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4">
+                <CardContent className="p-6">
                   <div className="text-center">
-                    <div className="athletic-gradient h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-white font-bold">🧥</span>
+                    <div className="athletic-gradient h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-white text-2xl">🧥</span>
                     </div>
-                    <h3 className="text-lg font-semibold mb-2">Outerwear</h3>
-                    <p className="text-sm text-muted-foreground">Jackets, Hoodies, Vests</p>
+                    <h3 className="text-xl font-semibold mb-2">Outerwear</h3>
+                    <p className="text-muted-foreground">Jackets, Hoodies, Vests</p>
                   </div>
                 </CardContent>
               </Card>

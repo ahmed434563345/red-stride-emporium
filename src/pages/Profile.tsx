@@ -30,7 +30,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Get current user
+  // Get current user and handle auth state
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -40,7 +40,19 @@ const Profile = () => {
       }
       setUser(user);
     };
+
     getUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        navigate('/signin');
+      } else if (session?.user) {
+        setUser(session.user);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   // Fetch user profile
@@ -52,9 +64,9 @@ const Profile = () => {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
       
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       return data as ProfileData;
     },
     enabled: !!user?.id
@@ -103,7 +115,6 @@ const Profile = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/signin');
     toast.success('Logged out successfully');
   };
 

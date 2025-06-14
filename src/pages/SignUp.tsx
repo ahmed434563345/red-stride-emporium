@@ -1,6 +1,6 @@
 
 import Navigation from '@/components/Navigation';
-import ConversationalAuth from '@/components/ConversationalAuth';
+import AuthComponent from '@/components/AuthComponent';
 
 const SignUp = () => {
   return (
@@ -8,7 +8,7 @@ const SignUp = () => {
       <Navigation />
       
       <div className="container mx-auto px-4 py-16">
-        <ConversationalAuth mode="register" />
+        <AuthComponent mode="register" />
       </div>
     </div>
   );

@@ -72,6 +72,7 @@ export type Database = {
           seo_title: string | null
           sizes: string[] | null
           stock: number
+          subcategory: string | null
           updated_at: string
         }
         Insert: {
@@ -92,6 +93,7 @@ export type Database = {
           seo_title?: string | null
           sizes?: string[] | null
           stock?: number
+          subcategory?: string | null
           updated_at?: string
         }
         Update: {
@@ -112,6 +114,7 @@ export type Database = {
           seo_title?: string | null
           sizes?: string[] | null
           stock?: number
+          subcategory?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -146,6 +149,27 @@ export type Database = {
           id?: string
           last_name?: string | null
           phone?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -184,7 +208,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
