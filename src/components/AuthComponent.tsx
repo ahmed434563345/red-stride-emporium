@@ -19,7 +19,7 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState(mode);
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>(mode);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,6 +42,12 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const handleTabChange = (value: string) => {
+    if (value === 'login' || value === 'register') {
+      setActiveTab(value);
+    }
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,7 +115,7 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
           <CardTitle className="text-center">Welcome</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Sign In</TabsTrigger>
               <TabsTrigger value="register">Sign Up</TabsTrigger>
