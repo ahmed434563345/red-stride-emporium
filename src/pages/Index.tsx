@@ -8,6 +8,19 @@ import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 
+// Updated Product interface to match Supabase data structure
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  original_price?: number;
+  images?: string[];
+  category: string;
+  stock: number;
+  is_new?: boolean;
+  brand?: string;
+}
+
 const Index = () => {
   const { data: featuredProducts = [] } = useQuery({
     queryKey: ['featured-products'],
@@ -17,7 +30,7 @@ const Index = () => {
         .select('*')
         .limit(4);
       if (error) throw error;
-      return data;
+      return data as Product[];
     }
   });
 
@@ -30,7 +43,7 @@ const Index = () => {
         .eq('is_new', true)
         .limit(4);
       if (error) throw error;
-      return data;
+      return data as Product[];
     }
   });
 
@@ -43,7 +56,7 @@ const Index = () => {
         .eq('category', 'Athletic Wear')
         .limit(4);
       if (error) throw error;
-      return data;
+      return data as Product[];
     }
   });
 
@@ -56,7 +69,7 @@ const Index = () => {
         .eq('category', 'Outerwear')
         .limit(4);
       if (error) throw error;
-      return data;
+      return data as Product[];
     }
   });
 
