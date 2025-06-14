@@ -10,7 +10,7 @@ interface Product {
   name: string;
   price: number;
   original_price?: number;
-  image: string;
+  images?: string[];
   category: string;
   stock: number;
   is_new?: boolean;
@@ -45,6 +45,12 @@ const ProductSection = ({ title, description, products, viewAllLink }: ProductSe
       }, 300);
     }
   };
+
+  // Transform products to match ProductCard expected format
+  const transformedProducts = products.map(product => ({
+    ...product,
+    image: product.images?.[0] || '/placeholder.svg' // Use first image or fallback
+  }));
 
   return (
     <section className="py-16">
@@ -81,7 +87,7 @@ const ProductSection = ({ title, description, products, viewAllLink }: ProductSe
           className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 md:grid md:grid-cols-2 md:overflow-visible"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {products.map((product) => (
+          {transformedProducts.map((product) => (
             <div key={product.id} className="flex-none w-72 md:w-auto">
               <ProductCard product={product} />
             </div>
