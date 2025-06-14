@@ -62,6 +62,8 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
       if (error) {
         if (error.message === 'Invalid login credentials') {
           toast.error('Invalid email or password. Please try again.');
+        } else if (error.message === 'Email not confirmed') {
+          toast.error('Please check your email and click the confirmation link before signing in.');
         } else {
           toast.error(error.message);
         }
@@ -78,7 +80,7 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -97,7 +99,21 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
         } else {
           toast.error(error.message);
         }
-      } else {
+      } else if (data.user) {
+        // Create profile entry for the new user
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            first_name: firstName,
+            last_name: lastName,
+            email: email
+          });
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+        }
+
         toast.success('Account created successfully! Please check your email to verify your account.');
         setActiveTab('login');
       }

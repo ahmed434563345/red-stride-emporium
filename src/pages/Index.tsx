@@ -1,8 +1,7 @@
 
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
-import ProductCard from '@/components/ProductCard';
+import ProductSection from '@/components/ProductSection';
 import VisitorTracker from '@/components/VisitorTracker';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -83,22 +82,12 @@ const Index = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Featured Products</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Check out our hand-picked selection of the hottest athletic gear
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </div>
-      </section>
+      <ProductSection
+        title="Featured Products"
+        description="Check out our hand-picked selection of the hottest athletic gear"
+        products={featuredProducts}
+        viewAllLink="/products"
+      />
 
       {/* Shop by Category */}
       <section className="py-16 bg-gray-50">
@@ -155,52 +144,30 @@ const Index = () => {
       </section>
 
       {/* New Arrivals */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">New Arrivals</h2>
-            <p className="text-muted-foreground">Fresh styles just dropped</p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {newArrivals.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </div>
-      </section>
+      <ProductSection
+        title="New Arrivals"
+        description="Fresh styles just dropped"
+        products={newArrivals}
+        viewAllLink="/products"
+      />
 
       {/* Athletic Wear Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Athletic Wear</h2>
-            <p className="text-muted-foreground">Performance gear for every sport</p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {athleticWear.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </div>
-      </section>
+      <div className="bg-gray-50">
+        <ProductSection
+          title="Athletic Wear"
+          description="Performance gear for every sport"
+          products={athleticWear}
+          viewAllLink="/athletic-wear"
+        />
+      </div>
 
       {/* Outerwear Collection */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Outerwear Collection</h2>
-            <p className="text-muted-foreground">Stay comfortable in any weather</p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {outerwear.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </div>
-      </section>
+      <ProductSection
+        title="Outerwear Collection"
+        description="Stay comfortable in any weather"
+        products={outerwear}
+        viewAllLink="/outerwear"
+      />
 
       {/* Call to Action */}
       <section className="athletic-gradient text-white py-16">

@@ -78,7 +78,7 @@ const ProductSection = ({ title, description, products, viewAllLink }: ProductSe
 
         <div 
           ref={scrollRef}
-          className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 md:grid md:grid-cols-4 md:overflow-visible"
+          className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 md:grid md:grid-cols-2 md:overflow-visible"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {products.map((product) => (
