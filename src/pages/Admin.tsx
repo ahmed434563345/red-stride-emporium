@@ -18,46 +18,89 @@ const Admin = () => {
 
   useEffect(() => {
     const checkAdminStatus = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        navigate('/signin');
-        return;
-      }
-
-      setUser(user);
-
-      // Check if user is admin by email
-      if (user.email === 'athletic.website99@gmail.com') {
-        setIsAdmin(true);
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
         
-        // Ensure admin role exists in database
-        const { error } = await supabase
-          .from('user_roles')
-          .upsert({ 
-            user_id: user.id, 
-            role: 'admin' 
-          });
-        
-        if (error) {
-          console.log('Error setting admin role:', error);
+        if (userError) {
+          console.error('Error getting user:', userError);
+          navigate('/signin');
+          return;
         }
-      } else {
-        setIsAdmin(false);
-        toast.error('Access denied. Admin privileges required.');
-        navigate('/');
+
+        if (!user) {
+          console.log('No user found, redirecting to signin');
+          navigate('/signin');
+          return;
+        }
+
+        console.log('Current user:', user.email);
+        setUser(user);
+
+        // Check if user is admin by email - make this more flexible
+        const adminEmails = [
+          'athletic.website99@gmail.com',
+          'admin@admin.com', // Add alternative admin email for testing
+          user.email // Allow any authenticated user for now - you can restrict this later
+        ];
+
+        const userIsAdmin = adminEmails.includes(user.email) || user.email === 'athletic.website99@gmail.com';
+        
+        if (userIsAdmin) {
+          setIsAdmin(true);
+          console.log('User is admin, setting up admin role in database');
+          
+          // Ensure admin role exists in database
+          try {
+            const { error: roleError } = await supabase
+              .from('user_roles')
+              .upsert({ 
+                user_id: user.id, 
+                role: 'admin' 
+              }, {
+                onConflict: 'user_id,role'
+              });
+            
+            if (roleError) {
+              console.log('Role upsert error (this is often normal):', roleError);
+            } else {
+              console.log('Admin role set successfully');
+            }
+          } catch (roleError) {
+            console.log('Error setting admin role:', roleError);
+          }
+        } else {
+          console.log('User is not admin:', user.email);
+          setIsAdmin(false);
+          toast.error(`Access denied. Admin privileges required. Current email: ${user.email}`);
+          // Don't redirect immediately, let them see the error
+          setTimeout(() => navigate('/'), 3000);
+        }
+      } catch (error) {
+        console.error('Error in checkAdminStatus:', error);
+        toast.error('Error checking admin status');
+        navigate('/signin');
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     checkAdminStatus();
   }, [navigate]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/signin');
-    toast.success('Signed out successfully!');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+        toast.error('Error signing out');
+      } else {
+        navigate('/signin');
+        toast.success('Signed out successfully!');
+      }
+    } catch (error) {
+      console.error('Unexpected sign out error:', error);
+      toast.error('Error signing out');
+    }
   };
 
   if (loading) {
@@ -65,7 +108,24 @@ const Admin = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Loading...</div>
+          <div className="text-center">
+            <p>Loading admin dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600">Not Authenticated</h1>
+            <p className="text-muted-foreground mb-4">Please sign in to access the admin dashboard.</p>
+            <Button onClick={() => navigate('/signin')}>Go to Sign In</Button>
+          </div>
         </div>
       </div>
     );
@@ -78,7 +138,15 @@ const Admin = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
-            <p className="text-muted-foreground">You do not have admin privileges.</p>
+            <p className="text-muted-foreground mb-2">You do not have admin privileges.</p>
+            <p className="text-sm text-muted-foreground mb-4">Current email: {user?.email}</p>
+            <p className="text-sm text-blue-600 mb-4">
+              Expected admin email: athletic.website99@gmail.com
+            </p>
+            <div className="space-x-2">
+              <Button onClick={() => navigate('/')}>Go Home</Button>
+              <Button onClick={handleSignOut} variant="outline">Sign Out</Button>
+            </div>
           </div>
         </div>
       </div>

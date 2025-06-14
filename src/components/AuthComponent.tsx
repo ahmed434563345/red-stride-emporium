@@ -27,6 +27,7 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        console.log('User already logged in:', user.email);
         navigate('/');
       }
     };
@@ -34,6 +35,7 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session?.user?.email);
       if (event === 'SIGNED_IN' && session) {
         toast.success('Successfully signed in!');
         navigate('/');
@@ -73,9 +75,10 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
     }
 
     setLoading(true);
+    console.log('Attempting to sign in with:', email);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
@@ -91,6 +94,10 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
         } else {
           toast.error(error.message || 'Failed to sign in. Please try again.');
         }
+      } else if (data.user) {
+        console.log('Sign in successful:', data.user.email);
+        toast.success('Welcome back!');
+        // Navigation will be handled by the auth state change listener
       }
     } catch (error) {
       console.error('Unexpected error:', error);
@@ -119,6 +126,7 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
     }
 
     setLoading(true);
+    console.log('Attempting to sign up with:', email);
 
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -146,6 +154,7 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
           toast.error(error.message || 'Failed to create account. Please try again.');
         }
       } else if (data.user) {
+        console.log('Sign up successful:', data.user.email);
         toast.success('Account created successfully! Please check your email to verify your account.');
         setActiveTab('login');
         // Clear the form
@@ -160,6 +169,12 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDemoLogin = () => {
+    setEmail('athletic.website99@gmail.com');
+    setPassword('ahmed1972');
+    toast.info('Demo admin credentials filled in. Click "Sign In" to continue.');
   };
 
   return (
@@ -216,12 +231,9 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
                     size="sm" 
                     className="mt-2 w-full"
                     disabled={loading}
-                    onClick={() => {
-                      setEmail('athletic.website99@gmail.com');
-                      setPassword('ahmed1972');
-                    }}
+                    onClick={handleDemoLogin}
                   >
-                    Use Demo Admin
+                    Fill Demo Admin Credentials
                   </Button>
                 </div>
               </form>
@@ -254,9 +266,9 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="register-email">Email</Label>
                   <Input
-                    id="email"
+                    id="register-email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -266,9 +278,9 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="register-password">Password</Label>
                   <Input
-                    id="password"
+                    id="register-password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
