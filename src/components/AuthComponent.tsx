@@ -18,12 +18,12 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'login' | 'register'>(mode);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -33,7 +33,6 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
     };
     checkUser();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state change:', event, session?.user?.email);
       if (event === 'SIGNED_IN' && session) {
@@ -48,17 +47,22 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
   const handleTabChange = (value: string) => {
     if (value === 'login' || value === 'register') {
       setActiveTab(value);
-      // Clear form when switching tabs
       setEmail('');
       setPassword('');
       setFirstName('');
       setLastName('');
+      setPhone('');
     }
   };
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string) => {
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    return phoneRegex.test(phone.replace(/\s/g, ''));
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -97,7 +101,6 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
       } else if (data.user) {
         console.log('Sign in successful:', data.user.email);
         toast.success('Welcome back!');
-        // Navigation will be handled by the auth state change listener
       }
     } catch (error) {
       console.error('Unexpected error:', error);
@@ -111,12 +114,17 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
     e.preventDefault();
     
     if (!email || !password || !firstName || !lastName) {
-      toast.error('Please fill in all fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
     if (!validateEmail(email)) {
       toast.error('Please enter a valid email address');
+      return;
+    }
+
+    if (phone && !validatePhone(phone)) {
+      toast.error('Please enter a valid phone number');
       return;
     }
 
@@ -136,6 +144,7 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
           data: {
             first_name: firstName.trim(),
             last_name: lastName.trim(),
+            phone: phone.trim(),
           },
           emailRedirectTo: `${window.location.origin}/`
         }
@@ -157,11 +166,11 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
         console.log('Sign up successful:', data.user.email);
         toast.success('Account created successfully! Please check your email to verify your account.');
         setActiveTab('login');
-        // Clear the form
         setEmail('');
         setPassword('');
         setFirstName('');
         setLastName('');
+        setPhone('');
       }
     } catch (error) {
       console.error('Unexpected error:', error);
@@ -220,7 +229,6 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
                   {loading ? 'Signing in...' : 'Sign In'}
                 </Button>
                 
-                {/* Admin Demo Credentials */}
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg border">
                   <p className="text-sm font-medium text-blue-800 mb-2">Demo Admin Account:</p>
                   <p className="text-xs text-blue-600">Email: athletic.website99@gmail.com</p>
@@ -243,7 +251,7 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="firstName">First Name *</Label>
                     <Input
                       id="firstName"
                       value={firstName}
@@ -254,7 +262,7 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="lastName">Last Name *</Label>
                     <Input
                       id="lastName"
                       value={lastName}
@@ -266,7 +274,7 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="register-email">Email</Label>
+                  <Label htmlFor="register-email">Email *</Label>
                   <Input
                     id="register-email"
                     type="email"
@@ -278,7 +286,21 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="register-password">Password</Label>
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+1234567890"
+                    disabled={loading}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Optional - Include country code for best results
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="register-password">Password *</Label>
                   <Input
                     id="register-password"
                     type="password"

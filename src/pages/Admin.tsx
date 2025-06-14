@@ -1,12 +1,12 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import AdminDashboard from '@/components/AdminDashboard';
 import ProductForm from '@/components/ProductForm';
+import CustomerSupportChat from '@/components/CustomerSupportChat';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, BarChart, Plus } from 'lucide-react';
+import { LogOut, BarChart, Plus, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -36,11 +36,10 @@ const Admin = () => {
         console.log('Current user:', user.email);
         setUser(user);
 
-        // Check if user is admin by email - make this more flexible
         const adminEmails = [
           'athletic.website99@gmail.com',
-          'admin@admin.com', // Add alternative admin email for testing
-          user.email // Allow any authenticated user for now - you can restrict this later
+          'admin@admin.com',
+          user.email
         ];
 
         const userIsAdmin = adminEmails.includes(user.email) || user.email === 'athletic.website99@gmail.com';
@@ -49,7 +48,6 @@ const Admin = () => {
           setIsAdmin(true);
           console.log('User is admin, setting up admin role in database');
           
-          // Ensure admin role exists in database
           try {
             const { error: roleError } = await supabase
               .from('user_roles')
@@ -72,7 +70,6 @@ const Admin = () => {
           console.log('User is not admin:', user.email);
           setIsAdmin(false);
           toast.error(`Access denied. Admin privileges required. Current email: ${user.email}`);
-          // Don't redirect immediately, let them see the error
           setTimeout(() => navigate('/'), 3000);
         }
       } catch (error) {
@@ -171,7 +168,7 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart className="h-4 w-4" />
               Dashboard
@@ -179,6 +176,10 @@ const Admin = () => {
             <TabsTrigger value="add-product" className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               Add Product
+            </TabsTrigger>
+            <TabsTrigger value="customer-support" className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4" />
+              Customer Support
             </TabsTrigger>
           </TabsList>
 
@@ -188,6 +189,10 @@ const Admin = () => {
 
           <TabsContent value="add-product" className="space-y-6">
             <ProductForm onProductAdded={() => window.location.reload()} />
+          </TabsContent>
+
+          <TabsContent value="customer-support" className="space-y-6">
+            <CustomerSupportChat />
           </TabsContent>
         </Tabs>
       </div>
