@@ -8,6 +8,7 @@ import { Menu, User, ChevronDown, Search, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import AISearchBar from '@/components/AISearchBar';
 import CartWishlistCounter from '@/components/CartWishlistCounter';
+import { supabase } from '@/integrations/supabase/client'; // Add this import
 
 const Navigation = () => {
   const [user, setUser] = useState<any>(null);
@@ -28,7 +29,13 @@ const Navigation = () => {
     return () => window.removeEventListener('storage', handler);
   }, []);
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    // Use Supabase to sign the user out and listen for logout propagation everywhere
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error('Failed to sign out. Please try again.');
+      return;
+    }
     localStorage.removeItem('user');
     localStorage.removeItem('isAuthenticated');
     setUser(null);
@@ -180,3 +187,4 @@ const Navigation = () => {
 };
 
 export default Navigation;
+
