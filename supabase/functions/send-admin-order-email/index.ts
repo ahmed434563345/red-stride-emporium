@@ -10,13 +10,21 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const ADMIN_EMAIL = "athletic.website99@gmail.com"; // Update if you want a different admin email
+const ADMIN_EMAIL = "athletic.website99@gmail.com"; // Change to your backend admin email if needed
 
 interface OrderNotificationRequest {
   order: {
     id: string;
     items: Array<any>;
-    shipping: any;
+    shipping: {
+      fullName: string;
+      address: string;
+      city: string;
+      governorate: string;
+      postalCode?: string;
+      email: string;
+      phone: string;
+    };
     paymentMethod: string;
     shippingMethod: string;
     total: number;
@@ -26,6 +34,7 @@ interface OrderNotificationRequest {
   }
 }
 
+// HTML for admin notification email
 function formatOrderSummary(order: OrderNotificationRequest['order']) {
   return `
     <h2>New Order Placed</h2>
@@ -51,6 +60,27 @@ function formatOrderSummary(order: OrderNotificationRequest['order']) {
   `;
 }
 
+// HTML for customer confirmation email
+function formatCustomerEmail(order: OrderNotificationRequest['order']) {
+  return `
+    <h2>Thanks for your order!</h2>
+    <p>Hello <b>${order.shipping.fullName}</b>,</p>
+    <p>We've received your order (<b>${order.id}</b>) on ${new Date(order.date).toLocaleString()}.</p>
+    <h3>Order Summary:</h3>
+    <ul>
+      ${order.items.map((item: any) =>
+        `<li>${item.name} (Size: ${item.size}) x${item.quantity} - ${item.price * item.quantity} L.E</li>`
+      ).join('')}
+    </ul>
+    <p><strong>Shipping to:</strong> ${order.shipping.address}, ${order.shipping.city}, ${order.shipping.governorate}, ${order.shipping.postalCode || ""}</p>
+    <p><strong>Order Total:</strong> ${order.total.toFixed(2)} L.E (including shipping and tax)</p>
+    <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
+    <p><strong>Shipping Method:</strong> ${order.shippingMethod}</p>
+    <hr>
+    <p>Thank you for shopping with Athletic Store!</p>
+  `;
+}
+
 serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -60,6 +90,7 @@ serve(async (req: Request): Promise<Response> => {
     const body: OrderNotificationRequest = await req.json();
     const { order } = body;
 
+    // 1. Email notification to admin
     await resend.emails.send({
       from: "Athletic Store <onboarding@resend.dev>",
       to: [ADMIN_EMAIL],
@@ -67,14 +98,26 @@ serve(async (req: Request): Promise<Response> => {
       html: formatOrderSummary(order),
     });
 
-    console.log("Admin email sent for order", order.id);
+    // 2. Order confirmation email to customer
+    if (order.shipping?.email) {
+      await resend.emails.send({
+        from: "Athletic Store <onboarding@resend.dev>",
+        to: [order.shipping.email],
+        subject: "Thanks for your order at Athletic Store!",
+        html: formatCustomerEmail(order)
+      });
+    }
+    
+    console.log("Emails sent for order", order.id);
+
+    // (OPTIONAL) Here you can add SMS sending with Twilio or another provider if desired.
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
-    console.error("Failed to send admin order email:", error);
+    console.error("Failed to send order emails:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

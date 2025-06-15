@@ -76,7 +76,10 @@ const Checkout = () => {
       return;
     }
 
-    // Prepare order items for Supabase insert
+    // Create a new order object to be inserted (1 row per product in orders table)
+    const orderId = `ORD-${Date.now()}`;
+
+    // Place the order rows (one per product), with shared info orderId for traceability
     const placedOrderItems = cartItems.map(item => ({
       product_id: item.id,
       quantity: item.quantity,
@@ -84,13 +87,14 @@ const Checkout = () => {
       product_name: item.name,
       size: item.size,
       user_id: user.id,
-      // status field is left default (pending/confirmed logic can be changed)
+      status: 'confirmed', // confirmed order
+      // Optionally, you could add custom fields if your schema allows
     }));
 
-    // Insert order items to Supabase orders table
+    // Insert all order items to Supabase orders table as a batch
     let errored = false;
-    for (const orderItem of placedOrderItems) {
-      const { error } = await supabase.from('orders').insert(orderItem);
+    if (placedOrderItems.length > 0) {
+      const { error } = await supabase.from('orders').insert(placedOrderItems);
       if (error) {
         errored = true;
         toast.error('Failed to save order, please try again.');
@@ -99,9 +103,9 @@ const Checkout = () => {
       }
     }
 
-    // Saved for local record as before
+    // Prepare the full order object
     const order = {
-      id: `ORD-${Date.now()}`,
+      id: orderId,
       items: cartItems,
       shipping: shippingInfo,
       paymentMethod,
@@ -112,18 +116,16 @@ const Checkout = () => {
       userId: user.id
     };
 
+    // Save order in localStorage for history, etc (optional for now)
     const orders = JSON.parse(localStorage.getItem('orders') || '[]');
     orders.push(order);
     localStorage.setItem('orders', JSON.stringify(orders));
-    const adminOrders = JSON.parse(localStorage.getItem('adminOrders') || '[]');
-    adminOrders.push(order);
-    localStorage.setItem('adminOrders', JSON.stringify(adminOrders));
     localStorage.removeItem('cart');
 
-    // Send email notification to admin using Edge Function (send-admin-order-email)
+    // Call edge function to email admin + customer
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL || 'https://phppkguqvucqvyycemeh.supabase.co'}/functions/v1/send-admin-order-email`,
+        "https://phppkguqvucqvyycemeh.supabase.co/functions/v1/send-admin-order-email",
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -133,10 +135,10 @@ const Checkout = () => {
         }
       );
       if (!response.ok) {
-        toast.error('Order placed, but failed to send admin notification email.');
+        toast.error('Order placed, but failed to send emails.');
       }
     } catch (err) {
-      toast.error('Order placed, but failed to contact admin (email error).');
+      toast.error('Order placed, but failed to send emails.');
     }
 
     setIsProcessing(false);
