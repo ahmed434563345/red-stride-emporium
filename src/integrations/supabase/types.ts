@@ -203,27 +203,36 @@ export type Database = {
       website_analytics: {
         Row: {
           created_at: string
+          device_type: string | null
           id: string
           ip_address: unknown | null
+          location: string | null
           page_path: string
+          phone_number: string | null
           session_id: string | null
           user_agent: string | null
           visitor_id: string
         }
         Insert: {
           created_at?: string
+          device_type?: string | null
           id?: string
           ip_address?: unknown | null
+          location?: string | null
           page_path: string
+          phone_number?: string | null
           session_id?: string | null
           user_agent?: string | null
           visitor_id: string
         }
         Update: {
           created_at?: string
+          device_type?: string | null
           id?: string
           ip_address?: unknown | null
+          location?: string | null
           page_path?: string
+          phone_number?: string | null
           session_id?: string | null
           user_agent?: string | null
           visitor_id?: string
