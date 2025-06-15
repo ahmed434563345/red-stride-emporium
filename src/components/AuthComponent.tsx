@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,20 +26,24 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        console.log('User already logged in:', user.email);
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('isAuthenticated', 'true');
         navigate('/');
       }
     };
     checkUser();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change:', event, session?.user?.email);
-      if (event === 'SIGNED_IN' && session) {
+      if (event === 'SIGNED_IN' && session?.user) {
+        localStorage.setItem('user', JSON.stringify(session.user));
+        localStorage.setItem('isAuthenticated', 'true');
         toast.success('Successfully signed in!');
         navigate('/');
       }
+      if (event === 'SIGNED_OUT') {
+        localStorage.removeItem('user');
+        localStorage.removeItem('isAuthenticated');
+      }
     });
-
     return () => subscription.unsubscribe();
   }, [navigate]);
 
@@ -86,7 +89,6 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
         email: email.trim(),
         password,
       });
-
       if (error) {
         console.error('Sign in error:', error);
         if (error.message === 'Invalid login credentials') {
@@ -99,7 +101,9 @@ const AuthComponent = ({ mode = 'login' }: AuthComponentProps) => {
           toast.error(error.message || 'Failed to sign in. Please try again.');
         }
       } else if (data.user) {
-        console.log('Sign in successful:', data.user.email);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('isAuthenticated', 'true');
+        // navigate handled by auth change event
         toast.success('Welcome back!');
       }
     } catch (error) {

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -13,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { User, Settings, ShoppingBag, Heart, LogOut, Store } from 'lucide-react';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 interface ProfileData {
   id: string;
@@ -132,18 +132,23 @@ const Profile = () => {
     updateProfileMutation.mutate(profileData);
   };
 
+  // Add recents from localStorage:
+  const [recent, setRecent] = useState<any[]>([]);
+  useEffect(() => {
+    const viewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+    setRecent(viewed);
+  }, []);
+
   if (!user) return null;
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">My Profile</h1>
           <p className="text-muted-foreground">Manage your account and view your orders</p>
         </div>
-
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile" className="flex items-center gap-2">
@@ -278,7 +283,9 @@ const Profile = () => {
                 <CardTitle>My Wishlist</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Your wishlist items will appear here</p>
+                <Link to="/wishlist">
+                  <Button>Go to Wishlist</Button>
+                </Link>
               </CardContent>
             </Card>
           </TabsContent>
@@ -303,6 +310,31 @@ const Profile = () => {
                   <LogOut className="h-4 w-4" />
                   Sign Out
                 </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="recent">
+            <Card>
+              <CardHeader>
+                <CardTitle>Recently Viewed Products</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {recent.length === 0 ? (
+                  <p className="text-muted-foreground">No products viewed recently.</p>
+                ) : (
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {recent.map((prod: any) => (
+                      <Link key={prod.id} to={`/product/${prod.id}`}>
+                        <div className="border p-2 rounded hover:bg-accent transition">
+                          <img src={prod.image} alt={prod.name} className="w-full h-32 object-cover mb-2 rounded" />
+                          <h4 className="font-semibold">{prod.name}</h4>
+                          <span className="text-sm text-muted-foreground">{prod.category}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

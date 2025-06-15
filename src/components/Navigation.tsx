@@ -1,28 +1,37 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Input } from "@/components/ui/input"
-import { Menu, User, ChevronDown, Search } from 'lucide-react';
+import { Menu, User, ChevronDown, Search, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import AISearchBar from '@/components/AISearchBar';
 import CartWishlistCounter from '@/components/CartWishlistCounter';
 
 const Navigation = () => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Subscribe to auth state change for realtime login/logout UI update
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+    const handler = (e: StorageEvent) => {
+      if (e.key === 'user') {
+        setUser(e.newValue ? JSON.parse(e.newValue) : null);
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
   }, []);
 
   const handleSignOut = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('isAuthenticated');
+    setUser(null);
     navigate('/signin');
     toast.success('Signed out successfully!');
   };
@@ -31,7 +40,6 @@ const Navigation = () => {
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <div className="athletic-gradient h-8 w-8 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">A</span>
@@ -39,7 +47,6 @@ const Navigation = () => {
             <span className="text-xl font-bold">Athletic</span>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/products" className="text-gray-700 hover:text-primary transition-colors">
               All Products
@@ -63,7 +70,6 @@ const Navigation = () => {
             </DropdownMenu>
           </div>
 
-          {/* Search and Actions */}
           <div className="flex items-center space-x-4">
             <div className="hidden md:block">
               <AISearchBar />
@@ -98,6 +104,7 @@ const Navigation = () => {
                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
                       Sign Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
