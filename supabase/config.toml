@@ -1,1 +1,8 @@
+
 project_id = "phppkguqvucqvyycemeh"
+
+[functions.send-admin-order-email]
+verify_jwt = true
+
+[functions.send-admin-product-order-notification]
+verify_jwt = true

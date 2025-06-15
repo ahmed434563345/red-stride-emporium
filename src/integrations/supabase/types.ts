@@ -99,6 +99,7 @@ export type Database = {
           seo_title: string | null
           sizes: string[] | null
           stock: number
+          store_id: string | null
           subcategory: string | null
           updated_at: string
         }
@@ -120,6 +121,7 @@ export type Database = {
           seo_title?: string | null
           sizes?: string[] | null
           stock?: number
+          store_id?: string | null
           subcategory?: string | null
           updated_at?: string
         }
@@ -141,10 +143,19 @@ export type Database = {
           seo_title?: string | null
           sizes?: string[] | null
           stock?: number
+          store_id?: string | null
           subcategory?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -176,6 +187,30 @@ export type Database = {
           id?: string
           last_name?: string | null
           phone?: string | null
+        }
+        Relationships: []
+      }
+      stores: {
+        Row: {
+          admin_user_id: string
+          created_at: string | null
+          id: string
+          name: string
+          phone: string
+        }
+        Insert: {
+          admin_user_id: string
+          created_at?: string | null
+          id?: string
+          name: string
+          phone: string
+        }
+        Update: {
+          admin_user_id?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          phone?: string
         }
         Relationships: []
       }

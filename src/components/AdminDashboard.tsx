@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,18 +14,35 @@ const AdminDashboard = () => {
   const queryClient = useQueryClient();
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
+  const [storeId, setStoreId] = useState<string | null>(null);
 
-  // Fetch products from Supabase
+  // Fetch admin's store
+  useEffect(() => {
+    const fetchStore = async () => {
+      const { data, error } = await supabase
+        .from('stores')
+        .select('id')
+        .eq('admin_user_id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+      if (!error && data) setStoreId(data.id);
+    };
+    fetchStore();
+  }, []);
+
+  // Fetch store-limited products from Supabase
   const { data: products = [] } = useQuery({
-    queryKey: ['admin-products'],
+    queryKey: ['admin-products', storeId],
     queryFn: async () => {
+      if (!storeId) return [];
       const { data, error } = await supabase
         .from('products')
         .select('*')
+        .eq('store_id', storeId)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!storeId
   });
 
   // Fetch orders from Supabase

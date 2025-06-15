@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { X, Plus, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+
+interface Store {
+  id: string;
+  name: string;
+  phone: string;
+}
 
 interface ProductFormData {
   name: string;
@@ -50,14 +57,36 @@ const ProductForm = ({ onProductAdded }: { onProductAdded?: () => void }) => {
   const [newImage, setNewImage] = useState('');
   const [newFeature, setNewFeature] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedStore, setSelectedStore] = useState('');
+  const [stores, setStores] = useState<Store[]>([]);
+  const [loadingStores, setLoadingStores] = useState(true);
+
+  // Fetch current user's stores
+  useEffect(() => {
+    const fetchStores = async () => {
+      setLoadingStores(true);
+      const { data, error } = await supabase
+        .from('stores')
+        .select('*');
+      if (!error && data) {
+        setStores(data);
+        if (data.length === 1) setSelectedStore(data[0].id);
+      }
+      setLoadingStores(false);
+    };
+    fetchStores();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedStore) {
+      toast.error('Please select your store.');
+      return;
+    }
     setIsSubmitting(true);
-
     try {
-      // Build product for Supabase
       const productToStore = {
+        store_id: selectedStore,
         name: formData.name,
         price: Number(formData.price),
         original_price: formData.originalPrice || null,
@@ -75,7 +104,6 @@ const ProductForm = ({ onProductAdded }: { onProductAdded?: () => void }) => {
         is_new: true
       };
 
-      // Insert into Supabase products table
       const { error } = await supabase.from('products').insert([productToStore]);
       if (error) {
         toast.error('Failed to save product to website: ' + error.message);
@@ -178,6 +206,31 @@ const ProductForm = ({ onProductAdded }: { onProductAdded?: () => void }) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Store Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="store">Store *</Label>
+            {loadingStores ? (
+              <div className="text-sm text-muted-foreground">Loading stores...</div>
+            ) : stores.length === 0 ? (
+              <div className="text-sm text-red-600">No store found for your admin account. Please create a store first.</div>
+            ) : (
+              <select
+                id="store"
+                value={selectedStore}
+                onChange={e => setSelectedStore(e.target.value)}
+                className="border p-2 rounded w-full"
+                required
+                disabled={stores.length === 1}
+              >
+                <option value="">Select store</option>
+                {stores.map(store => (
+                  <option key={store.id} value={store.id}>
+                    {store.name} ({store.phone})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
