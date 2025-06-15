@@ -4,12 +4,7 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
 import { cn } from "@/lib/utils"
 
-// Accept all TooltipProvider props and forward them
-type TooltipProviderProps = React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Provider>;
-
-const TooltipProvider: React.FC<TooltipProviderProps> = ({ children, ...props }) => (
-  <TooltipPrimitive.Provider {...props}>{children}</TooltipPrimitive.Provider>
-);
+const TooltipProvider = TooltipPrimitive.Provider
 
 const Tooltip = TooltipPrimitive.Root
 
@@ -32,4 +27,3 @@ const TooltipContent = React.forwardRef<
 TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
-
