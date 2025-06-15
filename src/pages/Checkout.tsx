@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CreditCard, MapPin, Truck, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const Checkout = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -63,11 +64,42 @@ const Checkout = () => {
     }
 
     setIsProcessing(true);
-    
+
     // Simulate payment processing
     await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Save order to localStorage and admin orders
+
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    if (!user) {
+      toast.error('Please sign in to proceed with checkout');
+      setIsProcessing(false);
+      return;
+    }
+
+    // Prepare order items for Supabase insert
+    const placedOrderItems = cartItems.map(item => ({
+      product_id: item.id,
+      quantity: item.quantity,
+      price: item.price * item.quantity,
+      product_name: item.name,
+      size: item.size,
+      user_id: user.id,
+      // status field is left default (pending/confirmed logic can be changed)
+    }));
+
+    // Insert order items to Supabase orders table
+    let errored = false;
+    for (const orderItem of placedOrderItems) {
+      const { error } = await supabase.from('orders').insert(orderItem);
+      if (error) {
+        errored = true;
+        toast.error('Failed to save order, please try again.');
+        setIsProcessing(false);
+        return;
+      }
+    }
+
+    // Saved for local record as before
     const order = {
       id: `ORD-${Date.now()}`,
       items: cartItems,
@@ -77,22 +109,36 @@ const Checkout = () => {
       total,
       date: new Date().toISOString(),
       status: 'confirmed',
-      userId: JSON.parse(localStorage.getItem('user') || '{}').id
+      userId: user.id
     };
-    
-    // Save to user's orders
+
     const orders = JSON.parse(localStorage.getItem('orders') || '[]');
     orders.push(order);
     localStorage.setItem('orders', JSON.stringify(orders));
-    
-    // Save to admin orders
     const adminOrders = JSON.parse(localStorage.getItem('adminOrders') || '[]');
     adminOrders.push(order);
     localStorage.setItem('adminOrders', JSON.stringify(adminOrders));
-    
-    // Clear cart
     localStorage.removeItem('cart');
-    
+
+    // Send email notification to admin using Edge Function (send-admin-order-email)
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL || 'https://phppkguqvucqvyycemeh.supabase.co'}/functions/v1/send-admin-order-email`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            order,
+          }),
+        }
+      );
+      if (!response.ok) {
+        toast.error('Order placed, but failed to send admin notification email.');
+      }
+    } catch (err) {
+      toast.error('Order placed, but failed to contact admin (email error).');
+    }
+
     setIsProcessing(false);
     toast.success('Order placed successfully!');
     navigate('/payment-success', { state: { orderId: order.id } });
