@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProductFormData {
   name: string;
@@ -56,6 +57,34 @@ const ProductForm = ({ onProductAdded }: { onProductAdded?: () => void }) => {
     setIsSubmitting(true);
 
     try {
+      // Build product for Supabase
+      const productToStore = {
+        name: formData.name,
+        price: Number(formData.price),
+        original_price: formData.originalPrice || null,
+        description: formData.description,
+        category: formData.category,
+        sizes: formData.sizes.length ? formData.sizes : [],
+        colors: formData.colors.length ? formData.colors : [],
+        images: formData.images.length ? formData.images : null,
+        stock: Number(formData.stock),
+        brand: formData.brand,
+        features: formData.features.length ? formData.features : [],
+        seo_title: formData.seoTitle || null,
+        seo_description: formData.seoDescription || null,
+        seo_keywords: formData.seoKeywords || null,
+        is_new: true
+      };
+
+      // Insert into Supabase products table
+      const { error } = await supabase.from('products').insert([productToStore]);
+      if (error) {
+        toast.error('Failed to save product to website: ' + error.message);
+      } else {
+        toast.success('Product added to website!');
+      }
+
+      // Also save to localStorage for admin notifications
       const product = {
         id: Date.now().toString(),
         ...formData,
@@ -71,7 +100,7 @@ const ProductForm = ({ onProductAdded }: { onProductAdded?: () => void }) => {
       existingProducts.push(product);
       localStorage.setItem('adminProducts', JSON.stringify(existingProducts));
 
-      // Send notification email
+      // Send notification email (existing logic)
       const notifications = JSON.parse(localStorage.getItem('adminNotifications') || '[]');
       notifications.unshift({
         id: Date.now(),
@@ -82,8 +111,6 @@ const ProductForm = ({ onProductAdded }: { onProductAdded?: () => void }) => {
       });
       localStorage.setItem('adminNotifications', JSON.stringify(notifications));
 
-      toast.success('Product added successfully!');
-      
       // Reset form
       setFormData({
         name: '',
@@ -379,3 +406,4 @@ const ProductForm = ({ onProductAdded }: { onProductAdded?: () => void }) => {
 };
 
 export default ProductForm;
+
