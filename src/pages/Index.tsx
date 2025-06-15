@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import ProductSection from '@/components/ProductSection';
@@ -77,7 +76,35 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       <VisitorTracker />
-      
+
+      {/* --- Men/Women Small Hero Section --- */}
+      <section className="py-10 bg-white border-b">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-center md:justify-between gap-6">
+          <div className="text-center md:text-left flex-1">
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">Looking for something specific?</h2>
+            <p className="text-muted-foreground text-lg md:text-xl mb-4">
+              Start by browsing top picks for <span className="font-semibold text-primary">Men</span> or <span className="font-semibold text-primary">Women</span>.
+            </p>
+            <div className="flex flex-col md:flex-row gap-3 justify-center md:justify-start">
+              <Link to="/men/t-shirts">
+                <Button size="lg" className="w-48">Shop for Men</Button>
+              </Link>
+              <Link to="/women/t-shirts">
+                <Button size="lg" variant="secondary" className="w-48">Shop for Women</Button>
+              </Link>
+            </div>
+          </div>
+          <div className="hidden md:block flex-1">
+            {/* Illustrative icons for visual cue */}
+            <div className="flex items-center justify-center gap-8">
+              <span className="text-5xl">👔</span>
+              <span className="text-5xl">🧢</span>
+              <span className="text-5xl">👖</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section */}
       <section className="athletic-gradient text-white py-20">
         <div className="container mx-auto px-4 text-center">

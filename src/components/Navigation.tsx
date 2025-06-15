@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -53,11 +52,47 @@ const Navigation = () => {
             </div>
             <span className="text-xl font-bold">Athletic</span>
           </Link>
-
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/products" className="text-gray-700 hover:text-primary transition-colors">
               All Products
             </Link>
+            {/* ----- Men Dropdown ----- */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="text-gray-700 hover:text-primary transition-colors flex items-center">
+                Men
+                <ChevronDown className="ml-1 h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem asChild>
+                  <Link to="/men/t-shirts">T-Shirts</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/men/jeans">Jeans</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/men/caps-accessories">Caps &amp; Accessories</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {/* ----- Women Dropdown ----- */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="text-gray-700 hover:text-primary transition-colors flex items-center">
+                Women
+                <ChevronDown className="ml-1 h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem asChild>
+                  <Link to="/women/t-shirts">T-Shirts</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/women/jeans">Jeans</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/women/caps-accessories">Caps &amp; Accessories</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {/* ----- Old Categories Dropdown (kept for reference) ----- */}
             <DropdownMenu>
               <DropdownMenuTrigger className="text-gray-700 hover:text-primary transition-colors flex items-center">
                 Categories
@@ -76,7 +111,6 @@ const Navigation = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-
           <div className="flex items-center space-x-4">
             <div className="hidden md:block">
               <AISearchBar />
@@ -143,6 +177,16 @@ const Navigation = () => {
                   <Link to="/products" className="flex items-center space-x-2">
                     All Products
                   </Link>
+                  {/* Men Mobile Section */}
+                  <div className="font-semibold text-gray-600">Men</div>
+                  <Link to="/men/t-shirts" className="flex items-center space-x-2 pl-2">T-Shirts</Link>
+                  <Link to="/men/jeans" className="flex items-center space-x-2 pl-2">Jeans</Link>
+                  <Link to="/men/caps-accessories" className="flex items-center space-x-2 pl-2">Caps &amp; Accessories</Link>
+                  {/* Women Mobile Section */}
+                  <div className="font-semibold text-gray-600 mt-2">Women</div>
+                  <Link to="/women/t-shirts" className="flex items-center space-x-2 pl-2">T-Shirts</Link>
+                  <Link to="/women/jeans" className="flex items-center space-x-2 pl-2">Jeans</Link>
+                  <Link to="/women/caps-accessories" className="flex items-center space-x-2 pl-2">Caps &amp; Accessories</Link>
                   <Link to="/shoes" className="flex items-center space-x-2">
                     Shoes
                   </Link>
@@ -187,4 +231,3 @@ const Navigation = () => {
 };
 
 export default Navigation;
-
