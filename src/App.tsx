@@ -21,6 +21,12 @@ import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
+import MenTShirts from "./pages/MenTShirts";
+import MenJeans from "./pages/MenJeans";
+import MenCapsAccessories from "./pages/MenCapsAccessories";
+import WomenTShirts from "./pages/WomenTShirts";
+import WomenJeans from "./pages/WomenJeans";
+import WomenCapsAccessories from "./pages/WomenCapsAccessories";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +54,14 @@ const App = () => (
           <Route path="/chat" element={<Chat />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
+          {/* --- New routes for Men --- */}
+          <Route path="/men/t-shirts" element={<MenTShirts />} />
+          <Route path="/men/jeans" element={<MenJeans />} />
+          <Route path="/men/caps-accessories" element={<MenCapsAccessories />} />
+          {/* --- New routes for Women --- */}
+          <Route path="/women/t-shirts" element={<WomenTShirts />} />
+          <Route path="/women/jeans" element={<WomenJeans />} />
+          <Route path="/women/caps-accessories" element={<WomenCapsAccessories />} />
         </Routes>
         <ChatWidget />
       </BrowserRouter>

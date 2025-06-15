@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -244,6 +243,15 @@ const ProductForm = ({ onProductAdded }: { onProductAdded?: () => void }) => {
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
+                {/* Men Categories */}
+                <SelectItem value="Men / T-Shirts">Men / T-Shirts</SelectItem>
+                <SelectItem value="Men / Jeans">Men / Jeans</SelectItem>
+                <SelectItem value="Men / Caps & Accessories">Men / Caps & Accessories</SelectItem>
+                {/* Women Categories */}
+                <SelectItem value="Women / T-Shirts">Women / T-Shirts</SelectItem>
+                <SelectItem value="Women / Jeans">Women / Jeans</SelectItem>
+                <SelectItem value="Women / Caps & Accessories">Women / Caps & Accessories</SelectItem>
+                {/* Existing categories (keep for legacy support) */}
                 <SelectItem value="Shoes">Shoes</SelectItem>
                 <SelectItem value="Athletic Wear">Athletic Wear</SelectItem>
                 <SelectItem value="Outerwear">Outerwear</SelectItem>
@@ -406,4 +414,3 @@ const ProductForm = ({ onProductAdded }: { onProductAdded?: () => void }) => {
 };
 
 export default ProductForm;
-
