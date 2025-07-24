@@ -10,6 +10,10 @@ import ProductDetail from "./pages/ProductDetail";
 import Shoes from "./pages/Shoes";
 import AthleticWear from "./pages/AthleticWear";
 import Outerwear from "./pages/Outerwear";
+import Electronics from "./pages/Electronics";
+import HomeGarden from "./pages/HomeGarden";
+import Books from "./pages/Books";
+import Beauty from "./pages/Beauty";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import Admin from "./pages/Admin";
@@ -43,6 +47,10 @@ const App = () => (
           <Route path="/shoes" element={<Shoes />} />
           <Route path="/athletic-wear" element={<AthleticWear />} />
           <Route path="/outerwear" element={<Outerwear />} />
+          <Route path="/electronics" element={<Electronics />} />
+          <Route path="/home-garden" element={<HomeGarden />} />
+          <Route path="/books" element={<Books />} />
+          <Route path="/beauty" element={<Beauty />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/search" element={<Search />} />

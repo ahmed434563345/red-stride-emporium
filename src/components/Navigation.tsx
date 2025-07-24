@@ -47,10 +47,10 @@ const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center space-x-2">
-            <div className="athletic-gradient h-8 w-8 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">A</span>
+            <div className="souq-gradient h-8 w-8 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">سوق</span>
             </div>
-            <span className="text-xl font-bold">Athletic</span>
+            <span className="text-xl font-bold">Souq Masr</span>
           </Link>
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/products" className="text-gray-700 hover:text-primary transition-colors">
@@ -92,13 +92,25 @@ const Navigation = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            {/* ----- Old Categories Dropdown (kept for reference) ----- */}
+            {/* ----- New Categories Dropdown ----- */}
             <DropdownMenu>
               <DropdownMenuTrigger className="text-gray-700 hover:text-primary transition-colors flex items-center">
                 Categories
                 <ChevronDown className="ml-1 h-4 w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent>
+                <DropdownMenuItem asChild>
+                  <Link to="/electronics">Electronics</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/home-garden">Home & Garden</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/books">Books</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/beauty">Beauty</Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/shoes">Shoes</Link>
                 </DropdownMenuItem>
@@ -187,15 +199,15 @@ const Navigation = () => {
                   <Link to="/women/t-shirts" className="flex items-center space-x-2 pl-2">T-Shirts</Link>
                   <Link to="/women/jeans" className="flex items-center space-x-2 pl-2">Jeans</Link>
                   <Link to="/women/caps-accessories" className="flex items-center space-x-2 pl-2">Caps &amp; Accessories</Link>
-                  <Link to="/shoes" className="flex items-center space-x-2">
-                    Shoes
-                  </Link>
-                  <Link to="/athletic-wear" className="flex items-center space-x-2">
-                    Athletic Wear
-                  </Link>
-                  <Link to="/outerwear" className="flex items-center space-x-2">
-                    Outerwear
-                  </Link>
+                  {/* New Categories Mobile Section */}
+                  <div className="font-semibold text-gray-600 mt-2">Categories</div>
+                  <Link to="/electronics" className="flex items-center space-x-2 pl-2">Electronics</Link>
+                  <Link to="/home-garden" className="flex items-center space-x-2 pl-2">Home & Garden</Link>
+                  <Link to="/books" className="flex items-center space-x-2 pl-2">Books</Link>
+                  <Link to="/beauty" className="flex items-center space-x-2 pl-2">Beauty</Link>
+                  <Link to="/shoes" className="flex items-center space-x-2 pl-2">Shoes</Link>
+                  <Link to="/athletic-wear" className="flex items-center space-x-2 pl-2">Athletic Wear</Link>
+                  <Link to="/outerwear" className="flex items-center space-x-2 pl-2">Outerwear</Link>
                   {user ? (
                     <>
                       <Link to="/profile" className="flex items-center space-x-2">
