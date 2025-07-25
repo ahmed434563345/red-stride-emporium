@@ -43,26 +43,29 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
+    <nav className="glass-card border-b border-souq-gold/20 sticky top-0 z-50 backdrop-blur-xl">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="souq-gradient h-8 w-8 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">سوق</span>
+        <div className="flex items-center justify-between h-18">
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="souq-gradient h-10 w-10 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-md">
+              <span className="text-white font-bold text-base">سوق</span>
             </div>
-            <span className="text-xl font-bold">Souq Masr</span>
+            <div className="flex flex-col">
+              <span className="font-display text-xl font-bold souq-text-gradient">Souq Masr</span>
+              <span className="text-xs text-muted-foreground font-medium">Egyptian Marketplace</span>
+            </div>
           </Link>
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/products" className="text-gray-700 hover:text-primary transition-colors">
+            <Link to="/products" className="text-foreground hover:souq-text-gradient transition-all duration-300 font-semibold hover:scale-105">
               All Products
             </Link>
             {/* ----- Men Dropdown ----- */}
             <DropdownMenu>
-              <DropdownMenuTrigger className="text-gray-700 hover:text-primary transition-colors flex items-center">
+              <DropdownMenuTrigger className="text-foreground hover:souq-text-gradient transition-all duration-300 flex items-center font-semibold hover:scale-105">
                 Men
                 <ChevronDown className="ml-1 h-4 w-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent className="glass-card border-souq-gold/20 shadow-luxury">
                 <DropdownMenuItem asChild>
                   <Link to="/men/t-shirts">T-Shirts</Link>
                 </DropdownMenuItem>
