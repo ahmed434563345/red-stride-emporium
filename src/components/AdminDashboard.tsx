@@ -292,6 +292,12 @@ const AdminDashboard = () => {
                     <p className="text-sm text-muted-foreground">
                       Quantity: {order.quantity} - Price: {order.price} L.E
                     </p>
+                    <p className="text-sm text-muted-foreground">
+                      Customer: {order.customer_name} | Phone: {order.customer_phone}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Address: {order.shipping_address}, {order.shipping_city}, {order.shipping_governorate}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(order.created_at).toLocaleString()}
                     </p>

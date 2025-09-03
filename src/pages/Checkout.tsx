@@ -48,11 +48,21 @@ const Checkout = () => {
     const placedOrderItems = cartItems.map(item => ({
       product_id: item.id,
       quantity: item.quantity,
-      price: item.price * item.quantity,
+      price: item.price,
+      order_total: item.price * item.quantity,
       product_name: item.name,
       size: item.size,
       user_id: user.id,
-      status: 'confirmed',
+      customer_name: shippingInfo.fullName,
+      customer_email: shippingInfo.email,
+      customer_phone: shippingInfo.phone,
+      shipping_address: shippingInfo.address,
+      shipping_city: shippingInfo.city,
+      shipping_governorate: shippingInfo.governorate,
+      shipping_postal_code: shippingInfo.postalCode || null,
+      shipping_method: shippingMethod,
+      payment_method: paymentMethod,
+      status: 'pending',
     }));
 
     if (placedOrderItems.length > 0) {

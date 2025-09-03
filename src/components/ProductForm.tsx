@@ -57,45 +57,16 @@ const ProductForm = ({ onProductAdded }: { onProductAdded?: () => void }) => {
   const [newImage, setNewImage] = useState('');
   const [newFeature, setNewFeature] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedStore, setSelectedStore] = useState('');
-  const [stores, setStores] = useState<Store[]>([]);
-  const [loadingStores, setLoadingStores] = useState(true);
-
-  // Fetch current user's stores
-  useEffect(() => {
-    const fetchStores = async () => {
-      setLoadingStores(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        const { data, error } = await supabase
-          .from('stores')
-          .select('*')
-          .eq('admin_user_id', user.id);
-          
-        if (!error && data) {
-          setStores(data);
-          if (data.length === 1) setSelectedStore(data[0].id);
-        } else if (error) {
-          console.error('Error fetching stores:', error);
-          toast.error('Failed to load stores');
-        }
-      }
-      setLoadingStores(false);
-    };
-    fetchStores();
-  }, []);
+  // No longer require store selection
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedStore) {
-      toast.error('Please select your store.');
-      return;
-    }
     setIsSubmitting(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const productToStore = {
-        store_id: selectedStore,
+        vendor_id: user?.id || null,
         name: formData.name,
         price: Number(formData.price),
         original_price: formData.originalPrice || null,
@@ -215,31 +186,6 @@ const ProductForm = ({ onProductAdded }: { onProductAdded?: () => void }) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Store Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="store">Store *</Label>
-            {loadingStores ? (
-              <div className="text-sm text-muted-foreground">Loading stores...</div>
-            ) : stores.length === 0 ? (
-              <div className="text-sm text-red-600">No store found for your admin account. Please create a store first.</div>
-            ) : (
-              <select
-                id="store"
-                value={selectedStore}
-                onChange={e => setSelectedStore(e.target.value)}
-                className="border p-2 rounded w-full"
-                required
-                disabled={stores.length === 1}
-              >
-                <option value="">Select store</option>
-                {stores.map(store => (
-                  <option key={store.id} value={store.id}>
-                    {store.name} ({store.phone})
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
