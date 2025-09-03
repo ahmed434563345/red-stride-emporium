@@ -65,12 +65,21 @@ const ProductForm = ({ onProductAdded }: { onProductAdded?: () => void }) => {
   useEffect(() => {
     const fetchStores = async () => {
       setLoadingStores(true);
-      const { data, error } = await supabase
-        .from('stores')
-        .select('*');
-      if (!error && data) {
-        setStores(data);
-        if (data.length === 1) setSelectedStore(data[0].id);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data, error } = await supabase
+          .from('stores')
+          .select('*')
+          .eq('admin_user_id', user.id);
+          
+        if (!error && data) {
+          setStores(data);
+          if (data.length === 1) setSelectedStore(data[0].id);
+        } else if (error) {
+          console.error('Error fetching stores:', error);
+          toast.error('Failed to load stores');
+        }
       }
       setLoadingStores(false);
     };
