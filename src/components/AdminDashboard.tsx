@@ -1,50 +1,13 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { Edit, Save, X, Users, ShoppingBag, Eye, TrendingUp } from 'lucide-react';
-import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { Users, ShoppingBag, DollarSign, TrendingUp } from 'lucide-react';
+import ProductManagement from '@/components/ProductManagement';
 
 const AdminDashboard = () => {
-  const queryClient = useQueryClient();
-  const [editingProduct, setEditingProduct] = useState<string | null>(null);
-  const [editingOrder, setEditingOrder] = useState<string | null>(null);
-  const [storeId, setStoreId] = useState<string | null>(null);
-
-  // Fetch admin's store
-  useEffect(() => {
-    const fetchStore = async () => {
-      const { data, error } = await supabase
-        .from('stores')
-        .select('id')
-        .eq('admin_user_id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-      if (!error && data) setStoreId(data.id);
-    };
-    fetchStore();
-  }, []);
-
-  // Fetch store-limited products from Supabase
-  const { data: products = [] } = useQuery({
-    queryKey: ['admin-products', storeId],
-    queryFn: async () => {
-      if (!storeId) return [];
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('store_id', storeId)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!storeId
-  });
-
   // Fetch orders from Supabase
   const { data: orders = [] } = useQuery({
     queryKey: ['admin-orders'],
@@ -58,16 +21,15 @@ const AdminDashboard = () => {
     }
   });
 
-  // Fetch analytics from Supabase
-  const { data: analytics = [] } = useQuery({
-    queryKey: ['website-analytics'],
+  // Fetch products count
+  const { data: productsCount = 0 } = useQuery({
+    queryKey: ['products-count'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('website_analytics')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { count, error } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true });
       if (error) throw error;
-      return data;
+      return count || 0;
     }
   });
 
@@ -83,73 +45,17 @@ const AdminDashboard = () => {
     }
   });
 
-  // Update product mutation
-  const updateProductMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
-      const { error } = await supabase
-        .from('products')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-      toast.success('Product updated successfully!');
-      setEditingProduct(null);
-    },
-    onError: (error) => {
-      toast.error('Failed to update product: ' + error.message);
-    }
-  });
-
-  // Update order mutation
-  const updateOrderMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-      toast.success('Order status updated!');
-      setEditingOrder(null);
-    },
-    onError: (error) => {
-      toast.error('Failed to update order: ' + error.message);
-    }
-  });
-
-  // Calculate analytics data
-  const dailyVisitors = analytics.reduce((acc: any, visit) => {
-    const date = new Date(visit.created_at).toLocaleDateString();
-    acc[date] = (acc[date] || 0) + 1;
-    return acc;
-  }, {});
-
-  const chartData = Object.entries(dailyVisitors).map(([date, count]) => ({
-    date,
-    visitors: count
-  })).slice(-7);
-
-  const orderStatusData = orders.reduce((acc: any, order) => {
-    acc[order.status] = (acc[order.status] || 0) + 1;
-    return acc;
-  }, {});
-
-  const pieData = Object.entries(orderStatusData).map(([status, count]) => ({
-    name: status,
-    value: count
-  }));
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
-  const totalRevenue = orders.reduce((sum, order) => sum + Number(order.price * order.quantity), 0);
-  const uniqueVisitors = new Set(analytics.map(a => a.visitor_id)).size;
+  const totalRevenue = orders.reduce((sum: number, order: any) => sum + Number(order.price * order.quantity), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <p className="text-muted-foreground">Manage your e-commerce platform</p>
+        </div>
+      </div>
+
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
@@ -158,7 +64,7 @@ const AdminDashboard = () => {
             <ShoppingBag className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{products.length}</div>
+            <div className="text-2xl font-bold">{productsCount}</div>
           </CardContent>
         </Card>
         
@@ -185,7 +91,7 @@ const AdminDashboard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalRevenue.toFixed(2)} L.E</div>
@@ -193,211 +99,56 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Daily Visitors (Last 7 Days)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="visitors" stroke="#8884d8" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Order Status Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Products Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Products Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {products.map((product) => (
-              <div key={product.id} className="border rounded-lg p-4">
-                {editingProduct === product.id ? (
-                  <EditableProductForm 
-                    product={product} 
-                    onSave={(updates) => updateProductMutation.mutate({ id: product.id, updates })}
-                    onCancel={() => setEditingProduct(null)}
-                  />
-                ) : (
-                  <div className="flex items-center justify-between">
+      <Tabs defaultValue="orders" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="orders">Orders Management</TabsTrigger>
+          <TabsTrigger value="products">Products Management</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="orders">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Orders</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {orders.map((order: any) => (
+                  <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-1">
-                      <h3 className="font-medium">{product.name}</h3>
-                      <p className="text-sm text-muted-foreground">{product.price} L.E - Stock: {product.stock}</p>
-                      <Badge variant="outline">{product.category}</Badge>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setEditingProduct(product.id)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Orders Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Orders Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {orders.map((order) => (
-              <div key={order.id} className="border rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <h3 className="font-medium">{order.product_name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Quantity: {order.quantity} - Price: {order.price} L.E
-                    </p>
-                    {(order as any).customer_name && (
-                      <p className="text-sm text-muted-foreground">
-                        Customer: {(order as any).customer_name} | Phone: {(order as any).customer_phone}
-                      </p>
-                    )}
-                    {(order as any).shipping_address && (
-                      <p className="text-sm text-muted-foreground">
-                        Address: {(order as any).shipping_address}, {(order as any).shipping_city}, {(order as any).shipping_governorate}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(order.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {editingOrder === order.id ? (
-                      <div className="flex items-center gap-2">
-                        <select 
-                          className="border rounded px-2 py-1 text-sm"
-                          defaultValue={order.status}
-                          onChange={(e) => updateOrderMutation.mutate({ id: order.id, status: e.target.value })}
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="processing">Processing</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-                        <Button size="sm" variant="outline" onClick={() => setEditingOrder(null)}>
-                          <X className="h-4 w-4" />
-                        </Button>
+                      <p className="font-medium">{order.product_name}</p>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span>Customer: {order.customer_name || 'N/A'}</span>
+                        <span>Phone: {order.customer_phone || 'N/A'}</span>
                       </div>
-                    ) : (
-                      <>
-                        <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
-                          {order.status}
-                        </Badge>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setEditingOrder(order.id)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span>Address: {order.shipping_address || 'N/A'}</span>
+                        <span>City: {order.shipping_city || 'N/A'}</span>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span>Governorate: {order.shipping_governorate || 'N/A'}</span>
+                        <span>Method: {order.payment_method || 'N/A'}</span>
+                      </div>
+                    </div>
+                    <div className="text-right space-y-2">
+                      <p className="font-bold">{order.order_total} L.E</p>
+                      <Badge variant={order.status === 'pending' ? 'secondary' : 'default'}>
+                        {order.status}
+                      </Badge>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(order.order_date).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-// Editable Product Form Component
-const EditableProductForm = ({ product, onSave, onCancel }: any) => {
-  const [formData, setFormData] = useState({
-    name: product.name,
-    price: product.price,
-    stock: product.stock,
-    description: product.description || ''
-  });
-
-  const handleSave = () => {
-    onSave(formData);
-  };
-
-  return (
-    <div className="space-y-4">
-      <Input 
-        value={formData.name}
-        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-        placeholder="Product name"
-      />
-      <div className="grid grid-cols-2 gap-4">
-        <Input 
-          type="number"
-          value={formData.price}
-          onChange={(e) => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
-          placeholder="Price"
-        />
-        <Input 
-          type="number"
-          value={formData.stock}
-          onChange={(e) => setFormData(prev => ({ ...prev, stock: Number(e.target.value) }))}
-          placeholder="Stock"
-        />
-      </div>
-      <Textarea 
-        value={formData.description}
-        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-        placeholder="Description"
-      />
-      <div className="flex gap-2">
-        <Button onClick={handleSave}>
-          <Save className="h-4 w-4 mr-2" />
-          Save
-        </Button>
-        <Button variant="outline" onClick={onCancel}>
-          <X className="h-4 w-4 mr-2" />
-          Cancel
-        </Button>
-      </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="products">
+          <ProductManagement />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

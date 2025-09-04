@@ -16,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 20 14.3% 4.1%;
 
-    --primary: 24 95% 53%;
+    --primary: 190 100% 45%;
     --primary-foreground: 60 9.1% 97.8%;
 
     --secondary: 60 4.8% 95.9%;
@@ -33,15 +33,15 @@
 
     --border: 20 5.9% 90%;
     --input: 20 5.9% 90%;
-    --ring: 24 95% 53%;
+    --ring: 190 100% 45%;
 
     --radius: 0.75rem;
 
-    /* Enhanced Egyptian color palette */
-    --souq-gold: 24 95% 53%;
-    --souq-gold-light: 24 95% 63%;
-    --souq-gold-dark: 24 95% 43%;
-    --souq-gold-muted: 24 50% 85%;
+    /* Enhanced Egyptian color palette - Modern Blue/Emerald */
+    --souq-gold: 190 100% 45%;
+    --souq-gold-light: 190 100% 55%;
+    --souq-gold-dark: 190 100% 35%;
+    --souq-gold-muted: 190 60% 90%;
     
     --souq-emerald: 142 76% 36%;
     --souq-emerald-light: 142 76% 46%;

@@ -15,9 +15,9 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm hover:shadow-md",
         ghost: "hover:bg-accent hover:text-accent-foreground hover:shadow-sm",
         link: "text-primary underline-offset-4 hover:underline",
-        luxury: "souq-gradient text-white shadow-gold hover:shadow-luxury hover:-translate-y-1 font-semibold",
-        premium: "bg-souq-navy text-white hover:bg-souq-navy-light shadow-elegant hover:shadow-luxury hover:-translate-y-0.5",
-        elegant: "glass-card text-foreground hover:shadow-elegant hover:-translate-y-0.5 border border-souq-gold/20",
+        luxury: "souq-gradient text-white border-0 shadow-gold hover:shadow-luxury font-semibold hover:scale-105 transition-transform",
+        premium: "bg-souq-navy text-white hover:bg-souq-navy-light shadow-elegant hover:shadow-luxury hover:scale-105 transition-transform",
+        elegant: "glass-card text-foreground hover:shadow-elegant hover:scale-105 transition-transform border border-souq-gold/20",
       },
       size: {
         default: "h-11 px-6 py-2",

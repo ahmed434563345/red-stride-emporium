@@ -79,11 +79,11 @@ const Navigation = () => {
             </DropdownMenu>
             {/* ----- Women Dropdown ----- */}
             <DropdownMenu>
-              <DropdownMenuTrigger className="text-gray-700 hover:text-primary transition-colors flex items-center">
+              <DropdownMenuTrigger className="text-foreground hover:souq-text-gradient transition-all duration-300 flex items-center font-semibold hover:scale-105">
                 Women
                 <ChevronDown className="ml-1 h-4 w-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent className="glass-card border-souq-gold/20 shadow-luxury">
                 <DropdownMenuItem asChild>
                   <Link to="/women/t-shirts">T-Shirts</Link>
                 </DropdownMenuItem>
@@ -97,11 +97,11 @@ const Navigation = () => {
             </DropdownMenu>
             {/* ----- New Categories Dropdown ----- */}
             <DropdownMenu>
-              <DropdownMenuTrigger className="text-gray-700 hover:text-primary transition-colors flex items-center">
+              <DropdownMenuTrigger className="text-foreground hover:souq-text-gradient transition-all duration-300 flex items-center font-semibold hover:scale-105">
                 Categories
                 <ChevronDown className="ml-1 h-4 w-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent className="glass-card border-souq-gold/20 shadow-luxury">
                 <DropdownMenuItem asChild>
                   <Link to="/electronics">Electronics</Link>
                 </DropdownMenuItem>
@@ -134,22 +134,22 @@ const Navigation = () => {
             {user ? (
               <div className="flex items-center space-x-4">
                 <Link to="/wishlist">
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" className="hover:souq-text-gradient transition-all">
                     <CartWishlistCounter type="wishlist" />
                   </Button>
                 </Link>
                 <Link to="/cart">
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" className="hover:souq-text-gradient transition-all">
                     <CartWishlistCounter type="cart" />
                   </Button>
                 </Link>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" className="hover:souq-text-gradient transition-all">
                       <User className="h-5 w-5" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="glass-card border-souq-gold/20 shadow-luxury">
                     <DropdownMenuItem asChild>
                       <Link to="/profile">Profile</Link>
                     </DropdownMenuItem>
@@ -169,10 +169,10 @@ const Navigation = () => {
             ) : (
               <div className="flex items-center space-x-2">
                 <Link to="/signin">
-                  <Button variant="ghost">Sign In</Button>
+                  <Button variant="ghost" className="hover:souq-text-gradient transition-all">Sign In</Button>
                 </Link>
                 <Link to="/signup">
-                  <Button>Sign Up</Button>
+                  <Button className="souq-gradient text-white">Sign Up</Button>
                 </Link>
               </div>
             )}

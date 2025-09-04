@@ -100,7 +100,7 @@ const Index = () => {
               
               <p className="text-xl lg:text-2xl mb-8 max-w-2xl slide-in-right leading-relaxed text-white/90 font-light">
                 Your premium Egyptian marketplace - Discover authentic treasures, 
-                modern elegance, and everything that makes Egypt extraordinary.
+                modern innovation, and everything that makes Egypt extraordinary.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 fade-in-up">
@@ -109,9 +109,9 @@ const Index = () => {
                     🛍️ Start Shopping
                   </Button>
                 </Link>
-                <Link to="/about">
+                <Link to="/products">
                   <Button size="xl" variant="elegant" className="text-lg px-12 py-6">
-                    Learn More
+                    Browse Categories
                   </Button>
                 </Link>
               </div>
@@ -227,7 +227,7 @@ const Index = () => {
           <div className="max-w-4xl mx-auto space-y-8">
             <h2 className="font-display text-display font-bold mb-6">Ready to Explore Souq Masr?</h2>
             <p className="text-xl lg:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed font-light">
-              Join thousands of satisfied customers who trust us for authentic Egyptian products and modern treasures
+              Join thousands of satisfied customers who trust us for authentic Egyptian products and modern innovation
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link to="/products">

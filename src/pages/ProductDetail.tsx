@@ -11,13 +11,14 @@ import { Badge } from '@/components/ui/badge';
 import { Heart, ShoppingCart, Star, Truck, Shield, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import WishlistPopup from '@/components/WishlistPopup';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
 
-  const { data: product, isLoading } = useQuery({
+  const { data: product, isLoading: productLoading } = useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
       if (!id) throw new Error('Product ID is required');
@@ -33,17 +34,72 @@ const ProductDetail = () => {
     enabled: !!id
   });
 
-  const handleAddToCart = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [showWishlistPopup, setShowWishlistPopup] = useState(false);
+
+  const checkAuthentication = () => {
+    const user = localStorage.getItem('user');
+    if (!user) {
+      toast.error('Please sign in to use this feature');
+      return false;
+    }
+    return true;
+  };
+
+  const handleAddToCart = async () => {
+    if (!checkAuthentication()) return;
+    
     if (product?.sizes && product.sizes.length > 0 && !selectedSize) {
       toast.error('Please select a size');
       return;
     }
     
-    // Add to cart logic here
+    if (product && product.stock <= 0) {
+      toast.error('Product is out of stock');
+      return;
+    }
+    
+    setIsLoading(true);
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    
+    const cartItem = {
+      ...product,
+      quantity: 1,
+      size: selectedSize || 'One Size',
+      addedAt: new Date().toISOString()
+    };
+    
+    const existingItemIndex = cart.findIndex((item: any) => item.id === product?.id);
+    if (existingItemIndex > -1) {
+      cart[existingItemIndex].quantity += 1;
+    } else {
+      cart.push(cartItem);
+    }
+    
+    localStorage.setItem('cart', JSON.stringify(cart));
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setIsLoading(false);
     toast.success(`${product?.name} added to cart!`);
   };
 
   const handleAddToWishlist = () => {
+    if (!checkAuthentication()) return;
+    
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    const isAlreadyWishlisted = wishlist.some((item: any) => item.id === product?.id);
+    
+    if (isAlreadyWishlisted) {
+      toast.error('Item is already in your wishlist');
+      return;
+    }
+    
+    const updatedWishlist = [...wishlist, product];
+    localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+    window.dispatchEvent(new CustomEvent('wishlistUpdated'));
+    
+    setShowWishlistPopup(true);
     toast.success(`${product?.name} added to wishlist!`);
   };
 
@@ -51,7 +107,7 @@ const ProductDetail = () => {
     window.location.href = `/search?q=${encodeURIComponent(query)}`;
   };
 
-  if (isLoading) {
+  if (productLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
@@ -219,11 +275,19 @@ const ProductDetail = () => {
             <div className="space-y-3">
               <Button
                 onClick={handleAddToCart}
-                disabled={product.stock === 0}
-                className="w-full athletic-gradient text-lg py-6"
-              >
-                <ShoppingCart className="mr-2 h-5 w-5" />
-                Add to Cart
+                disabled={product.stock === 0 || isLoading}
+                className="w-full souq-gradient text-white text-lg py-6">
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    Add to Cart
+                  </>
+                )}
               </Button>
               <Button
                 variant="outline"
@@ -264,6 +328,12 @@ const ProductDetail = () => {
           />
         )}
       </div>
+      
+      <WishlistPopup 
+        isOpen={showWishlistPopup}
+        onClose={() => setShowWishlistPopup(false)}
+        recentlyAdded={product}
+      />
     </div>
   );
 };
