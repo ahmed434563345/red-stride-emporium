@@ -74,6 +74,7 @@ const Checkout = () => {
           shipping_method: shippingMethod,
           payment_method: paymentMethod,
           shipping_cost: shippingCost,
+          shipping_address_id: null, // Set to null since it's nullable
           status: 'pending'
         };
 
