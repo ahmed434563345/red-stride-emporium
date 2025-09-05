@@ -42,18 +42,28 @@ export const useCheckoutForm = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const user = localStorage.getItem('user');
-    if (!user) {
-      toast.error('Please sign in to proceed with checkout');
-      navigate('/signin');
-      return;
-    }
-    if (cart.length === 0) {
-      navigate('/cart');
-      return;
-    }
-    setCartItems(cart);
+    const checkAuthAndCart = async () => {
+      // Check authentication with Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error('Please sign in to proceed with checkout');
+        navigate('/signin');
+        return;
+      }
+
+      // Check cart items
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      if (cart.length === 0) {
+        toast.error('Your cart is empty');
+        navigate('/cart');
+        return;
+      }
+      
+      setCartItems(cart);
+    };
+
+    checkAuthAndCart();
   }, [navigate]);
 
   const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);

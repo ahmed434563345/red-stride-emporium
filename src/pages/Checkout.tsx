@@ -30,80 +30,110 @@ const Checkout = () => {
   } = useCheckoutForm();
 
   const handlePlaceOrder = async () => {
+    // Validate required fields
     if (!shippingInfo.fullName || !shippingInfo.email || !shippingInfo.phone || !shippingInfo.address) {
       toast.error('Please fill in all required fields');
       return;
     }
-    setIsProcessing(true);
 
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    const userStr = localStorage.getItem('user');
-    const user = userStr ? JSON.parse(userStr) : null;
-    if (!user) {
-      toast.error('Please sign in to proceed with checkout');
-      setIsProcessing(false);
+    if (!shippingInfo.city || !shippingInfo.governorate) {
+      toast.error('Please complete your shipping address');
       return;
     }
-    const orderId = `ORD-${Date.now()}`;
-    const placedOrderItems = cartItems.map(item => ({
-      product_id: item.id,
-      quantity: item.quantity,
-      price: item.price,
-      order_total: item.price * item.quantity,
-      product_name: item.name,
-      size: item.size,
-      user_id: user.id,
-      customer_name: shippingInfo.fullName,
-      customer_email: shippingInfo.email,
-      customer_phone: shippingInfo.phone,
-      shipping_address: shippingInfo.address,
-      shipping_city: shippingInfo.city,
-      shipping_governorate: shippingInfo.governorate,
-      shipping_postal_code: shippingInfo.postalCode || null,
-      shipping_method: shippingMethod,
-      payment_method: paymentMethod,
-      status: 'pending',
-    }));
 
-    if (placedOrderItems.length > 0) {
-      const { error } = await supabase.from('orders').insert(placedOrderItems);
-      if (error) {
-        toast.error('Failed to save order, please try again.');
+    setIsProcessing(true);
+
+    try {
+      // Get current user from Supabase auth
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        toast.error('Please sign in to proceed with checkout');
+        navigate('/signin');
         setIsProcessing(false);
         return;
       }
-    }
-    const order = {
-      id: orderId,
-      items: cartItems,
-      shipping: shippingInfo,
-      paymentMethod,
-      shippingMethod,
-      total,
-      date: new Date().toISOString(),
-      status: 'confirmed',
-      userId: user.id
-    };
-    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-    orders.push(order);
-    localStorage.setItem('orders', JSON.stringify(orders));
-    localStorage.removeItem('cart');
 
-    try {
-      await fetch(
-        "https://phppkguqvucqvyycemeh.supabase.co/functions/v1/send-admin-order-email",
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order }),
-        }
-      );
-    } catch (err) {
-      // Emails may fail but don't block here
+      // Create orders for each cart item
+      const orderPromises = cartItems.map(async (item) => {
+        const orderData = {
+          user_id: user.id,
+          product_id: item.id,
+          product_name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          size: item.size,
+          order_total: total,
+          customer_name: shippingInfo.fullName,
+          customer_email: shippingInfo.email,
+          customer_phone: shippingInfo.phone,
+          shipping_address: shippingInfo.address,
+          shipping_city: shippingInfo.city,
+          shipping_governorate: shippingInfo.governorate,
+          shipping_postal_code: shippingInfo.postalCode,
+          shipping_method: shippingMethod,
+          payment_method: paymentMethod,
+          shipping_cost: shippingCost,
+          status: 'pending'
+        };
+
+        return supabase.from('orders').insert([orderData]);
+      });
+
+      // Execute all order insertions
+      const results = await Promise.all(orderPromises);
+      
+      // Check for any errors
+      const hasErrors = results.some(result => result.error);
+      if (hasErrors) {
+        console.error('Order insertion errors:', results.filter(r => r.error));
+        toast.error('Failed to place order. Please try again.');
+        setIsProcessing(false);
+        return;
+      }
+
+      // Clear cart and create success data
+      const orderId = `ORD-${Date.now()}`;
+      const order = {
+        id: orderId,
+        items: cartItems,
+        shipping: shippingInfo,
+        paymentMethod,
+        shippingMethod,
+        subtotal,
+        shippingCost,
+        tax,
+        total,
+        date: new Date().toISOString(),
+        status: 'confirmed',
+        userId: user.id
+      };
+
+      // Store in localStorage for success page
+      localStorage.setItem('lastOrder', JSON.stringify(order));
+      localStorage.removeItem('cart');
+      
+      // Dispatch cart updated event
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+
+      // Send notification email (non-blocking)
+      try {
+        await supabase.functions.invoke('send-admin-order-email', {
+          body: { order }
+        });
+      } catch (emailError) {
+        console.log('Email notification failed, but order was placed successfully');
+      }
+
+      toast.success('Order placed successfully!');
+      navigate('/payment-success', { state: { orderId: order.id } });
+      
+    } catch (error) {
+      console.error('Order placement error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsProcessing(false);
     }
-    setIsProcessing(false);
-    toast.success('Order placed successfully!');
-    navigate('/payment-success', { state: { orderId: order.id } });
   };
 
   return (
