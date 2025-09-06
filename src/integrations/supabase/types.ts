@@ -353,7 +353,7 @@ export type Database = {
             foreignKeyName: "orders_shipping_address_id_fkey"
             columns: ["shipping_address_id"]
             isOneToOne: false
-            referencedRelation: "shipping_addresses"
+            referencedRelation: "shipping_addresses_id"
             referencedColumns: ["id"]
           },
         ]
@@ -528,6 +528,7 @@ export type Database = {
           updated_at: string
           vendor_id: string | null
           vendor_name: string | null
+          vendor_profile_id: string | null
           weight: number | null
         }
         Insert: {
@@ -556,6 +557,7 @@ export type Database = {
           updated_at?: string
           vendor_id?: string | null
           vendor_name?: string | null
+          vendor_profile_id?: string | null
           weight?: number | null
         }
         Update: {
@@ -584,6 +586,7 @@ export type Database = {
           updated_at?: string
           vendor_id?: string | null
           vendor_name?: string | null
+          vendor_profile_id?: string | null
           weight?: number | null
         }
         Relationships: [
@@ -599,6 +602,13 @@ export type Database = {
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_vendor_profile_id_fkey"
+            columns: ["vendor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -639,48 +649,48 @@ export type Database = {
         }
         Relationships: []
       }
-      shipping_addresses: {
+      shipping_addresses_id: {
         Row: {
           address_line_1: string
-          address_line_2: string | null
+          address_line_2: string
           city: string
           country: string
-          created_at: string | null
+          created_at: string
           full_name: string
           id: string
-          order_id: string | null
-          phone: string | null
+          order_id: string
+          phone: string
           postal_code: string
-          state: string | null
-          user_id: string | null
+          state: string
+          user_id: string
         }
         Insert: {
           address_line_1: string
-          address_line_2?: string | null
+          address_line_2: string
           city: string
           country?: string
-          created_at?: string | null
+          created_at?: string
           full_name: string
           id?: string
-          order_id?: string | null
-          phone?: string | null
+          order_id: string
+          phone: string
           postal_code: string
-          state?: string | null
-          user_id?: string | null
+          state: string
+          user_id: string
         }
         Update: {
           address_line_1?: string
-          address_line_2?: string | null
+          address_line_2?: string
           city?: string
           country?: string
-          created_at?: string | null
+          created_at?: string
           full_name?: string
           id?: string
-          order_id?: string | null
-          phone?: string | null
+          order_id?: string
+          phone?: string
           postal_code?: string
-          state?: string | null
-          user_id?: string | null
+          state?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -704,24 +714,44 @@ export type Database = {
           admin_user_id: string
           created_at: string | null
           id: string
+          is_active: boolean | null
           name: string
           phone: string
+          store_description: string | null
+          store_logo_url: string | null
+          vendor_profile_id: string | null
         }
         Insert: {
           admin_user_id: string
           created_at?: string | null
           id?: string
+          is_active?: boolean | null
           name: string
           phone: string
+          store_description?: string | null
+          store_logo_url?: string | null
+          vendor_profile_id?: string | null
         }
         Update: {
           admin_user_id?: string
           created_at?: string | null
           id?: string
+          is_active?: boolean | null
           name?: string
           phone?: string
+          store_description?: string | null
+          store_logo_url?: string | null
+          vendor_profile_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "stores_vendor_profile_id_fkey"
+            columns: ["vendor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -741,6 +771,157 @@ export type Database = {
           id?: string
           role?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      vendor_messages: {
+        Row: {
+          admin_user_id: string | null
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          parent_message_id: string | null
+          sender_type: string
+          subject: string
+          vendor_profile_id: string
+        }
+        Insert: {
+          admin_user_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          parent_message_id?: string | null
+          sender_type: string
+          subject: string
+          vendor_profile_id: string
+        }
+        Update: {
+          admin_user_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          parent_message_id?: string | null
+          sender_type?: string
+          subject?: string
+          vendor_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_messages_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_messages_vendor_profile_id_fkey"
+            columns: ["vendor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          order_id: string | null
+          product_id: string | null
+          title: string
+          type: string
+          vendor_profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          order_id?: string | null
+          product_id?: string | null
+          title: string
+          type: string
+          vendor_profile_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          order_id?: string | null
+          product_id?: string | null
+          title?: string
+          type?: string
+          vendor_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_notifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_notifications_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_notifications_vendor_profile_id_fkey"
+            columns: ["vendor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_profiles: {
+        Row: {
+          business_address: string | null
+          business_description: string | null
+          business_email: string
+          business_phone: string
+          commission_rate: number | null
+          created_at: string
+          id: string
+          status: string | null
+          updated_at: string
+          user_id: string
+          vendor_name: string
+        }
+        Insert: {
+          business_address?: string | null
+          business_description?: string | null
+          business_email: string
+          business_phone: string
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          status?: string | null
+          updated_at?: string
+          user_id: string
+          vendor_name: string
+        }
+        Update: {
+          business_address?: string | null
+          business_description?: string | null
+          business_email?: string
+          business_phone?: string
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+          vendor_name?: string
         }
         Relationships: []
       }
@@ -794,7 +975,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user" | "vendor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -921,6 +1102,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user", "vendor"],
+    },
   },
 } as const
