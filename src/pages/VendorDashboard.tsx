@@ -47,36 +47,56 @@ const VendorDashboard = () => {
         return;
       }
 
-      // Check if user has vendor role
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'vendor')
-        .single();
+      console.log('Checking vendor auth for user:', user.id);
 
-      if (!roleData) {
-        toast.error('Access denied. Vendor account required.');
-        navigate('/');
-        return;
-      }
-
-      // Get vendor profile
+      // First get vendor profile
       const { data: profileData, error: profileError } = await supabase
         .from('vendor_profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
+        console.error('Error getting vendor profile:', profileError);
         toast.error('Failed to load vendor profile');
         navigate('/');
         return;
       }
 
+      if (!profileData) {
+        toast.error('No vendor profile found. Please complete vendor registration.');
+        navigate('/vendor-signup');
+        return;
+      }
+
+      console.log('Vendor profile found:', profileData);
+
+      // Ensure user has vendor role
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'vendor')
+        .maybeSingle();
+
+      if (roleError) {
+        console.error('Error checking vendor role:', roleError);
+        // Try to create vendor role if it doesn't exist but vendor profile does
+        const { error: insertRoleError } = await supabase
+          .from('user_roles')
+          .insert({ user_id: user.id, role: 'vendor' });
+        
+        if (insertRoleError) {
+          console.error('Error creating vendor role:', insertRoleError);
+          toast.error('Error setting up vendor permissions');
+          return;
+        }
+      }
+
       setVendorProfile(profileData);
       await loadStats(profileData.id);
     } catch (error) {
+      console.error('Error in checkVendorAuth:', error);
       toast.error('Authentication failed');
       navigate('/signin');
     } finally {

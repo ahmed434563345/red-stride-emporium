@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Send, Users } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MessageCircle, Send, Users, Store } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ChatMessage {
@@ -28,7 +28,9 @@ interface UserProfile {
 
 const CustomerSupportChat = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
+  const [newVendorMessage, setNewVendorMessage] = useState('');
   const queryClient = useQueryClient();
 
   // Get all users with messages
@@ -79,6 +81,38 @@ const CustomerSupportChat = () => {
     enabled: !!selectedUserId
   });
 
+  // Fetch vendors for messaging
+  const { data: vendors = [] } = useQuery({
+    queryKey: ['admin-vendors-for-chat'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vendor_profiles')
+        .select('*')
+        .order('vendor_name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Fetch vendor messages
+  const { data: vendorMessages = [] } = useQuery({
+    queryKey: ['vendor-messages', selectedVendorId],
+    queryFn: async () => {
+      if (!selectedVendorId) return [];
+      
+      const { data, error } = await supabase
+        .from('vendor_messages')
+        .select('*')
+        .eq('vendor_profile_id', selectedVendorId)
+        .order('created_at', { ascending: true });
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedVendorId
+  });
+
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async ({ userId, message }: { userId: string; message: string }) => {
@@ -100,6 +134,35 @@ const CustomerSupportChat = () => {
     },
     onError: (error) => {
       toast.error('Failed to send message: ' + error.message);
+    }
+  });
+
+  // Send message to vendor
+  const sendVendorMessageMutation = useMutation({
+    mutationFn: async ({ vendorId, message }: { vendorId: string; message: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('vendor_messages')
+        .insert({
+          vendor_profile_id: vendorId,
+          admin_user_id: user.id,
+          sender_type: 'admin',
+          subject: 'Message from Admin',
+          message: message
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendor-messages'] });
+      setNewVendorMessage('');
+      toast.success('Message sent to vendor successfully');
+    },
+    onError: (error) => {
+      console.error('Error sending vendor message:', error);
+      toast.error('Failed to send message to vendor');
     }
   });
 
@@ -125,6 +188,37 @@ const CustomerSupportChat = () => {
     }
   }, [selectedUserId]);
 
+  // Set up real-time subscriptions
+  useEffect(() => {
+    const chatChannel = supabase
+      .channel('chat_messages_realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['chat-messages'] });
+          queryClient.invalidateQueries({ queryKey: ['users-with-messages'] });
+        }
+      )
+      .subscribe();
+
+    const vendorChannel = supabase
+      .channel('vendor_messages_realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'vendor_messages' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['vendor-messages'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(chatChannel);
+      supabase.removeChannel(vendorChannel);
+    };
+  }, [queryClient]);
+
   const handleSendMessage = () => {
     if (!selectedUserId || !newMessage.trim()) return;
     
@@ -134,123 +228,258 @@ const CustomerSupportChat = () => {
     });
   };
 
+  const handleSendVendorMessage = async () => {
+    if (!newVendorMessage.trim() || !selectedVendorId) return;
+    
+    sendVendorMessageMutation.mutate({
+      vendorId: selectedVendorId,
+      message: newVendorMessage.trim()
+    });
+  };
+
   const getUnreadCount = (userId: string) => {
     return messages.filter(m => m.user_id === userId && m.sender_type === 'user' && !m.is_read).length;
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
-      {/* Users List */}
-      <Card className="lg:col-span-1">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Customer Conversations
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[500px]">
-            <div className="space-y-2">
-              {usersWithMessages.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No conversations yet</p>
-              ) : (
-                usersWithMessages.map((user) => (
-                  <div
-                    key={user.user_id}
-                    onClick={() => setSelectedUserId(user.user_id)}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                      selectedUserId === user.user_id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-muted'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">
-                          {user.profile.first_name} {user.profile.last_name}
-                        </p>
-                        <p className="text-xs opacity-70">{user.profile.email}</p>
-                      </div>
-                      {getUnreadCount(user.user_id) > 0 && (
-                        <Badge variant="destructive" className="text-xs">
-                          {getUnreadCount(user.user_id)}
-                        </Badge>
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <MessageCircle className="h-6 w-6" />
+        <h2 className="text-2xl font-bold">Communication Center</h2>
+      </div>
+
+      <Tabs defaultValue="customers" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="customers">Customer Support</TabsTrigger>
+          <TabsTrigger value="vendors">Vendor Communication</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="customers">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+            {/* Users List */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Customer Conversations
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ScrollArea className="h-[500px]">
+                  {usersWithMessages.length === 0 ? (
+                    <p className="p-4 text-center text-muted-foreground">No conversations yet</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {usersWithMessages.map((user) => {
+                        const unreadCount = getUnreadCount(user.user_id);
+                        return (
+                          <button
+                            key={user.user_id}
+                            onClick={() => setSelectedUserId(user.user_id)}
+                            className={`w-full p-3 text-left hover:bg-muted transition-colors border-b ${
+                              selectedUserId === user.user_id ? 'bg-muted' : ''
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">
+                                  {user.profile.first_name} {user.profile.last_name}
+                                </p>
+                                <p className="text-sm text-muted-foreground">{user.profile.email}</p>
+                              </div>
+                              {unreadCount > 0 && (
+                                <Badge variant="destructive">{unreadCount}</Badge>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </ScrollArea>
+              </CardContent>
+            </Card>
+
+            {/* Chat Messages */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>
+                  {selectedUserId 
+                    ? `Chat with ${usersWithMessages.find(u => u.user_id === selectedUserId)?.profile.first_name} ${usersWithMessages.find(u => u.user_id === selectedUserId)?.profile.last_name}`
+                    : 'Select a conversation'
+                  }
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {selectedUserId ? (
+                  <>
+                    <ScrollArea className="h-[400px] p-4">
+                      {messages.length === 0 ? (
+                        <p className="text-center text-muted-foreground">No messages yet</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {messages.map((message) => (
+                            <div
+                              key={message.id}
+                              className={`flex ${
+                                message.sender_type === 'admin' ? 'justify-end' : 'justify-start'
+                              }`}
+                            >
+                              <div
+                                className={`max-w-[70%] p-3 rounded-lg ${
+                                  message.sender_type === 'admin'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted'
+                                }`}
+                              >
+                                <p>{message.message}</p>
+                                <p className="text-xs opacity-70 mt-1">
+                                  {new Date(message.created_at).toLocaleTimeString()}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
-
-      {/* Chat Area */}
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5" />
-            {selectedUserId ? 'Customer Chat' : 'Select a conversation'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {selectedUserId ? (
-            <div className="flex flex-col h-[500px]">
-              {/* Messages */}
-              <ScrollArea className="flex-1 mb-4">
-                <div className="space-y-4">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${
-                        message.sender_type === 'admin' ? 'justify-end' : 'justify-start'
-                      }`}
-                    >
-                      <div
-                        className={`max-w-xs lg:max-w-md p-3 rounded-lg ${
-                          message.sender_type === 'admin'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        }`}
-                      >
-                        <p className="text-sm">{message.message}</p>
-                        <p className="text-xs opacity-70 mt-1">
-                          {new Date(message.created_at).toLocaleTimeString()}
-                        </p>
+                    </ScrollArea>
+                    
+                    <div className="p-4 border-t">
+                      <div className="flex gap-2">
+                        <Input
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          placeholder="Type your message..."
+                          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                        />
+                        <Button 
+                          onClick={handleSendMessage}
+                          disabled={!newMessage.trim() || sendMessageMutation.isPending}
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
+                  </>
+                ) : (
+                  <div className="h-[450px] flex items-center justify-center text-muted-foreground">
+                    Select a customer to start chatting
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
-              {/* Message Input */}
-              <div className="flex gap-2">
-                <Input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type your reply..."
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  disabled={sendMessageMutation.isPending}
-                />
-                <Button 
-                  onClick={handleSendMessage}
-                  disabled={!newMessage.trim() || sendMessageMutation.isPending}
-                  className="athletic-gradient"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-[500px] text-muted-foreground">
-              <div className="text-center">
-                <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Select a customer conversation to start chatting</p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        <TabsContent value="vendors">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+            {/* Vendors List */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Store className="h-4 w-4" />
+                  Vendor Communication
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ScrollArea className="h-[500px]">
+                  {vendors.length === 0 ? (
+                    <p className="p-4 text-center text-muted-foreground">No vendors found</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {vendors.map((vendor) => (
+                        <button
+                          key={vendor.id}
+                          onClick={() => setSelectedVendorId(vendor.id)}
+                          className={`w-full p-3 text-left hover:bg-muted transition-colors border-b ${
+                            selectedVendorId === vendor.id ? 'bg-muted' : ''
+                          }`}
+                        >
+                          <div>
+                            <p className="font-medium">{vendor.vendor_name}</p>
+                            <p className="text-sm text-muted-foreground">{vendor.business_email}</p>
+                            <Badge variant={vendor.status === 'approved' ? 'default' : 'destructive'}>
+                              {vendor.status}
+                            </Badge>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </CardContent>
+            </Card>
+
+            {/* Vendor Messages */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>
+                  {selectedVendorId 
+                    ? `Messages with ${vendors.find(v => v.id === selectedVendorId)?.vendor_name}`
+                    : 'Select a vendor to start conversation'
+                  }
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {selectedVendorId ? (
+                  <>
+                    <ScrollArea className="h-[400px] p-4">
+                      {vendorMessages.length === 0 ? (
+                        <p className="text-center text-muted-foreground">No messages yet</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {vendorMessages.map((message) => (
+                            <div
+                              key={message.id}
+                              className={`flex ${
+                                message.sender_type === 'admin' ? 'justify-end' : 'justify-start'
+                              }`}
+                            >
+                              <div
+                                className={`max-w-[70%] p-3 rounded-lg ${
+                                  message.sender_type === 'admin'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted'
+                                }`}
+                              >
+                                <p className="font-medium text-sm">{message.subject}</p>
+                                <p>{message.message}</p>
+                                <p className="text-xs opacity-70 mt-1">
+                                  {new Date(message.created_at).toLocaleTimeString()}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </ScrollArea>
+                    
+                    <div className="p-4 border-t">
+                      <div className="flex gap-2">
+                        <Input
+                          value={newVendorMessage}
+                          onChange={(e) => setNewVendorMessage(e.target.value)}
+                          placeholder="Type your message to vendor..."
+                          onKeyPress={(e) => e.key === 'Enter' && handleSendVendorMessage()}
+                        />
+                        <Button 
+                          onClick={handleSendVendorMessage}
+                          disabled={!newVendorMessage.trim() || sendVendorMessageMutation.isPending}
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="h-[450px] flex items-center justify-center text-muted-foreground">
+                    Select a vendor to start messaging
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
