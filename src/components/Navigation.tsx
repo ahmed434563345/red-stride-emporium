@@ -153,6 +153,9 @@ const Navigation = () => {
                     <DropdownMenuItem asChild>
                       <Link to="/profile">Profile</Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/vendor-dashboard">Vendor Dashboard</Link>
+                    </DropdownMenuItem>
                     {user.email === 'athletic.website99@gmail.com' && (
                       <DropdownMenuItem asChild>
                         <Link to="/admin">Admin</Link>
@@ -168,6 +171,11 @@ const Navigation = () => {
               </div>
             ) : (
               <div className="flex items-center space-x-2">
+                <Link to="/vendor-signup">
+                  <Button variant="outline" className="border-souq-gold text-souq-gold hover:bg-souq-gold hover:text-white transition-all">
+                    Sell
+                  </Button>
+                </Link>
                 <Link to="/signin">
                   <Button variant="ghost" className="hover:souq-text-gradient transition-all">Sign In</Button>
                 </Link>
@@ -216,6 +224,9 @@ const Navigation = () => {
                       <Link to="/profile" className="flex items-center space-x-2">
                         Profile
                       </Link>
+                      <Link to="/vendor-dashboard" className="flex items-center space-x-2">
+                        Vendor Dashboard
+                      </Link>
                       {user.email === 'athletic.website99@gmail.com' && (
                         <Link to="/admin" className="flex items-center space-x-2">
                           Admin
@@ -227,6 +238,9 @@ const Navigation = () => {
                     </>
                   ) : (
                     <>
+                      <Link to="/vendor-signup" className="flex items-center space-x-2">
+                        Become a Vendor
+                      </Link>
                       <Link to="/signin" className="flex items-center space-x-2">
                         Sign In
                       </Link>

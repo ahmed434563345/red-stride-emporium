@@ -31,6 +31,8 @@ import MenCapsAccessories from "./pages/MenCapsAccessories";
 import WomenTShirts from "./pages/WomenTShirts";
 import WomenJeans from "./pages/WomenJeans";
 import WomenCapsAccessories from "./pages/WomenCapsAccessories";
+import VendorSignUp from "./pages/VendorSignUp";
+import VendorDashboard from "./pages/VendorDashboard";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +63,8 @@ const App = () => (
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/vendor-signup" element={<VendorSignUp />} />
+          <Route path="/vendor-dashboard" element={<VendorDashboard />} />
           <Route path="*" element={<NotFound />} />
           {/* --- New routes for Men --- */}
           <Route path="/men/t-shirts" element={<MenTShirts />} />
