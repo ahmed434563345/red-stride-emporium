@@ -970,7 +970,11 @@ export type Database = {
     }
     Functions: {
       is_admin: {
-        Args: { user_id: string }
+        Args: { user_uuid: string }
+        Returns: boolean
+      }
+      is_admin_user: {
+        Args: { user_uuid: string }
         Returns: boolean
       }
     }

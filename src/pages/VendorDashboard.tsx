@@ -59,7 +59,7 @@ const VendorDashboard = () => {
       if (profileError) {
         console.error('Error getting vendor profile:', profileError);
         toast.error('Failed to load vendor profile');
-        navigate('/');
+        navigate('/vendor-signup');
         return;
       }
 
@@ -71,7 +71,7 @@ const VendorDashboard = () => {
 
       console.log('Vendor profile found:', profileData);
 
-      // Ensure user has vendor role
+      // Check if user has vendor role, if not create it
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
@@ -79,17 +79,15 @@ const VendorDashboard = () => {
         .eq('role', 'vendor')
         .maybeSingle();
 
-      if (roleError) {
-        console.error('Error checking vendor role:', roleError);
-        // Try to create vendor role if it doesn't exist but vendor profile does
+      if (!roleData && !roleError) {
+        // Create vendor role if it doesn't exist
         const { error: insertRoleError } = await supabase
           .from('user_roles')
           .insert({ user_id: user.id, role: 'vendor' });
         
         if (insertRoleError) {
           console.error('Error creating vendor role:', insertRoleError);
-          toast.error('Error setting up vendor permissions');
-          return;
+          // Continue anyway as the vendor profile exists
         }
       }
 
