@@ -17,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { product_id, order_id } = await req.json();
+    const { product_id, order_id, customer_name, customer_email, quantity, total } = await req.json();
 
     console.log(`Processing notification for product: ${product_id}, order: ${order_id}`);
 
@@ -27,6 +27,7 @@ serve(async (req) => {
       .select(`
         id,
         name,
+        price,
         vendor_profile_id,
         vendor_profiles!inner(
           id,
@@ -45,28 +46,13 @@ serve(async (req) => {
       );
     }
 
-    // Get order information
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .select("id, customer_name, customer_email, quantity, price")
-      .eq("id", order_id)
-      .single();
-
-    if (orderError || !order) {
-      console.error("Order not found:", orderError);
-      return new Response(
-        JSON.stringify({ error: "Order not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Create notification for vendor
+    // Create notification for vendor using the order data passed from checkout
     const notificationData = {
       vendor_profile_id: product.vendor_profile_id,
       type: "order_placed",
       title: "New Order Received!",
-      message: `Your product "${product.name}" has been ordered by ${order.customer_name}. Quantity: ${order.quantity}, Total: ${order.price} EGP`,
-      order_id: order_id,
+      message: `Your product "${product.name}" has been ordered by ${customer_name} (${customer_email}). Quantity: ${quantity}, Total: ${total} L.E`,
+      order_id: order_id, // This is the generated order ID from checkout
       product_id: product_id,
       is_read: false
     };

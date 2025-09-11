@@ -228,9 +228,9 @@ const ProductManagement = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Product Management</h2>
-          <p className="text-muted-foreground">
+          <div className="text-muted-foreground">
             Total Products: <Badge variant="secondary">{products.length}</Badge>
-          </p>
+          </div>
         </div>
         
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>

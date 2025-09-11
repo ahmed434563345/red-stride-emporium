@@ -117,13 +117,28 @@ const Checkout = () => {
       // Dispatch cart updated event
       window.dispatchEvent(new CustomEvent('cartUpdated'));
 
-      // Send notification email (non-blocking)
+      // Send notifications (non-blocking)
       try {
+        // Send admin email notification
         await supabase.functions.invoke('send-admin-order-email', {
           body: { order }
         });
+        
+        // Send vendor notifications for each product
+        for (const item of cartItems) {
+          await supabase.functions.invoke('send-vendor-notification', {
+            body: { 
+              product_id: item.id, 
+              order_id: orderId,
+              customer_name: shippingInfo.fullName,
+              customer_email: shippingInfo.email,
+              quantity: item.quantity,
+              total: item.price * item.quantity
+            }
+          });
+        }
       } catch (emailError) {
-        console.log('Email notification failed, but order was placed successfully');
+        console.log('Notification failed, but order was placed successfully:', emailError);
       }
 
       toast.success('Order placed successfully!');

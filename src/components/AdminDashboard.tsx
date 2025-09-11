@@ -18,10 +18,7 @@ const AdminDashboard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
-        .select(`
-          *,
-          profiles:user_id(first_name, last_name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(100);
       if (error) {
@@ -314,8 +311,8 @@ const AdminDashboard = () => {
                     <div className="space-y-1">
                       <p className="font-medium">{order.product_name}</p>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>Customer: {order.profiles?.first_name} {order.profiles?.last_name}</span>
-                        <span>Email: {order.profiles?.email}</span>
+                        <span>Customer: {order.customer_name}</span>
+                        <span>Email: {order.customer_email}</span>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span>Address: {order.shipping_address || 'N/A'}</span>

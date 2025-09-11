@@ -13,9 +13,15 @@ const PaymentSuccess = () => {
 
   useEffect(() => {
     if (orderId) {
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-      const order = orders.find(o => o.id === orderId);
-      setOrderDetails(order);
+      // Try to get from lastOrder first (from checkout), then fall back to orders array
+      const lastOrder = JSON.parse(localStorage.getItem('lastOrder') || 'null');
+      if (lastOrder && lastOrder.id === orderId) {
+        setOrderDetails(lastOrder);
+      } else {
+        const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+        const order = orders.find(o => o.id === orderId);
+        setOrderDetails(order);
+      }
     }
   }, [orderId]);
 
