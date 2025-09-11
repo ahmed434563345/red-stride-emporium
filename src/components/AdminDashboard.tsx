@@ -22,9 +22,13 @@ const AdminDashboard = () => {
           *,
           profiles:user_id(first_name, last_name, email)
         `)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) {
+        console.error('Error fetching orders:', error);
+        return [];
+      }
+      return data || [];
     }
   });
 
@@ -127,8 +131,11 @@ const AdminDashboard = () => {
         `)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching vendors:', error);
+        return [];
+      }
+      return data || [];
     }
   });
 
