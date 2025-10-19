@@ -33,6 +33,7 @@ import WomenJeans from "./pages/WomenJeans";
 import WomenCapsAccessories from "./pages/WomenCapsAccessories";
 import VendorSignUp from "./pages/VendorSignUp";
 import VendorDashboard from "./pages/VendorDashboard";
+import Stores from "./pages/Stores";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/vendor-signup" element={<VendorSignUp />} />
           <Route path="/vendor-dashboard" element={<VendorDashboard />} />
+          <Route path="/stores" element={<Stores />} />
           <Route path="*" element={<NotFound />} />
           {/* --- New routes for Men --- */}
           <Route path="/men/t-shirts" element={<MenTShirts />} />

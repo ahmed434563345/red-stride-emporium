@@ -4,10 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { Users, ShoppingBag, DollarSign, TrendingUp, Store } from 'lucide-react';
+import { Users, ShoppingBag, DollarSign, TrendingUp, Store, Menu } from 'lucide-react';
 import ProductManagement from '@/components/ProductManagement';
 import AdminVendorChat from '@/components/AdminVendorChat';
 import { useState } from 'react';
+import DashboardSidebar from './dashboard/DashboardSidebar';
+import DashboardCharts from './dashboard/DashboardCharts';
+import { Sheet, SheetContent } from './ui/sheet';
 
 const AdminDashboard = () => {
   const [selectedVendor, setSelectedVendor] = useState<any>(null);

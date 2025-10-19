@@ -504,6 +504,7 @@ export type Database = {
       products: {
         Row: {
           brand: string | null
+          categories: string[] | null
           category: string
           colors: string[] | null
           created_at: string
@@ -526,13 +527,16 @@ export type Database = {
           store_id: string | null
           subcategory: string | null
           updated_at: string
+          vendor_business_name: string | null
           vendor_id: string | null
+          vendor_logo_url: string | null
           vendor_name: string | null
           vendor_profile_id: string | null
           weight: number | null
         }
         Insert: {
           brand?: string | null
+          categories?: string[] | null
           category: string
           colors?: string[] | null
           created_at?: string
@@ -555,13 +559,16 @@ export type Database = {
           store_id?: string | null
           subcategory?: string | null
           updated_at?: string
+          vendor_business_name?: string | null
           vendor_id?: string | null
+          vendor_logo_url?: string | null
           vendor_name?: string | null
           vendor_profile_id?: string | null
           weight?: number | null
         }
         Update: {
           brand?: string | null
+          categories?: string[] | null
           category?: string
           colors?: string[] | null
           created_at?: string
@@ -584,12 +591,21 @@ export type Database = {
           store_id?: string | null
           subcategory?: string | null
           updated_at?: string
+          vendor_business_name?: string | null
           vendor_id?: string | null
+          vendor_logo_url?: string | null
           vendor_name?: string | null
           vendor_profile_id?: string | null
           weight?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "products_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_vendor_stores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "products_store_id_fkey"
             columns: ["store_id"]
@@ -712,35 +728,50 @@ export type Database = {
       stores: {
         Row: {
           admin_user_id: string
+          banner_url: string | null
+          business_hours: Json | null
           created_at: string | null
           id: string
           is_active: boolean | null
+          location: string | null
           name: string
           phone: string
+          rating: number | null
           store_description: string | null
           store_logo_url: string | null
+          total_reviews: number | null
           vendor_profile_id: string | null
         }
         Insert: {
           admin_user_id: string
+          banner_url?: string | null
+          business_hours?: Json | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
+          location?: string | null
           name: string
           phone: string
+          rating?: number | null
           store_description?: string | null
           store_logo_url?: string | null
+          total_reviews?: number | null
           vendor_profile_id?: string | null
         }
         Update: {
           admin_user_id?: string
+          banner_url?: string | null
+          business_hours?: Json | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
+          location?: string | null
           name?: string
           phone?: string
+          rating?: number | null
           store_description?: string | null
           store_logo_url?: string | null
+          total_reviews?: number | null
           vendor_profile_id?: string | null
         }
         Relationships: [
@@ -885,6 +916,8 @@ export type Database = {
       }
       vendor_profiles: {
         Row: {
+          banner_image_url: string | null
+          bio: string | null
           business_address: string | null
           business_description: string | null
           business_email: string
@@ -892,12 +925,17 @@ export type Database = {
           commission_rate: number | null
           created_at: string
           id: string
+          profile_photo_url: string | null
+          social_media: Json | null
           status: string | null
           updated_at: string
           user_id: string
           vendor_name: string
+          website_url: string | null
         }
         Insert: {
+          banner_image_url?: string | null
+          bio?: string | null
           business_address?: string | null
           business_description?: string | null
           business_email: string
@@ -905,12 +943,17 @@ export type Database = {
           commission_rate?: number | null
           created_at?: string
           id?: string
+          profile_photo_url?: string | null
+          social_media?: Json | null
           status?: string | null
           updated_at?: string
           user_id: string
           vendor_name: string
+          website_url?: string | null
         }
         Update: {
+          banner_image_url?: string | null
+          bio?: string | null
           business_address?: string | null
           business_description?: string | null
           business_email?: string
@@ -918,10 +961,13 @@ export type Database = {
           commission_rate?: number | null
           created_at?: string
           id?: string
+          profile_photo_url?: string | null
+          social_media?: Json | null
           status?: string | null
           updated_at?: string
           user_id?: string
           vendor_name?: string
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -966,7 +1012,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_vendor_stores: {
+        Row: {
+          banner_url: string | null
+          bio: string | null
+          business_hours: Json | null
+          created_at: string | null
+          id: string | null
+          location: string | null
+          name: string | null
+          phone: string | null
+          product_count: number | null
+          profile_photo_url: string | null
+          rating: number | null
+          store_description: string | null
+          store_logo_url: string | null
+          total_reviews: number | null
+          vendor_name: string | null
+          website_url: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {

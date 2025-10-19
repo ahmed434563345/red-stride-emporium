@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Product {
   id: string;
@@ -18,6 +19,7 @@ interface Product {
   stock: number;
   is_new?: boolean;
   brand?: string;
+  vendor_profile_id?: string;
 }
 
 interface ProductCardProps {
@@ -111,6 +113,26 @@ const ProductCard = ({ product, onWishlistChange }: ProductCardProps) => {
 
   const inStock = product.stock > 0;
 
+  // Fetch vendor info
+  const [vendorInfo, setVendorInfo] = useState<{ name?: string; logo?: string }>({});
+
+  useEffect(() => {
+    const loadVendorInfo = async () => {
+      if (product.vendor_profile_id) {
+        const { data } = await supabase
+          .from('vendor_profiles')
+          .select('vendor_name, profile_photo_url')
+          .eq('id', product.vendor_profile_id)
+          .single();
+        
+        if (data) {
+          setVendorInfo({ name: data.vendor_name, logo: data.profile_photo_url });
+        }
+      }
+    };
+    loadVendorInfo();
+  }, [product.vendor_profile_id]);
+
   return (
     <Card className="group relative overflow-hidden border-0 shadow-elegant hover:shadow-luxury hover-lift bg-white/80 backdrop-blur-sm">
       <div className="relative">
@@ -174,9 +196,19 @@ const ProductCard = ({ product, onWishlistChange }: ProductCardProps) => {
 
       <CardContent className="p-5">
         <div className="space-y-3">
-          <Badge variant="secondary" className="text-xs font-medium px-3 py-1 rounded-full bg-souq-gold-muted text-souq-navy">
-            {product.category}
-          </Badge>
+          <div className="flex items-center justify-between">
+            <Badge variant="secondary" className="text-xs font-medium px-3 py-1 rounded-full bg-souq-gold-muted text-souq-navy">
+              {product.category}
+            </Badge>
+            {vendorInfo.name && (
+              <div className="flex items-center gap-1">
+                {vendorInfo.logo && (
+                  <img src={vendorInfo.logo} alt={vendorInfo.name} className="h-5 w-5 rounded-full object-cover" />
+                )}
+                <span className="text-xs text-muted-foreground">{vendorInfo.name}</span>
+              </div>
+            )}
+          </div>
           
           <Link to={`/product/${product.id}`}>
             <h3 className="font-semibold text-base hover:souq-text-gradient transition-all duration-300 line-clamp-2 leading-tight">

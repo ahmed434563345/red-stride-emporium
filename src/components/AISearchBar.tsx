@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Search, Sparkles, X, TrendingUp } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SearchSuggestion {
   text: string;
@@ -25,17 +26,20 @@ const AISearchBar = ({ placeholder = "Search with AI assistance...", compact = f
   const navigate = useNavigate();
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Mock AI suggestions based on query
-  const generateAISuggestions = (searchQuery: string): SearchSuggestion[] => {
+  // Fetch real product data for AI suggestions
+  const generateAISuggestions = async (searchQuery: string): Promise<SearchSuggestion[]> => {
     const aiSuggestions: SearchSuggestion[] = [];
     
     if (searchQuery.length > 0) {
-      // Product suggestions
-      const products = ['Jordan shoes', 'Barcelona jersey', 'Athletic wear', 'Running shoes'];
-      products.forEach(product => {
-        if (product.toLowerCase().includes(searchQuery.toLowerCase())) {
-          aiSuggestions.push({ text: product, type: 'product' });
-        }
+      // Fetch actual products from database
+      const { data: products } = await supabase
+        .from('products')
+        .select('name, category')
+        .ilike('name', `%${searchQuery}%`)
+        .limit(5);
+
+      products?.forEach(product => {
+        aiSuggestions.push({ text: product.name, type: 'product' });
       });
 
       // AI-powered suggestions
@@ -60,13 +64,16 @@ const AISearchBar = ({ placeholder = "Search with AI assistance...", compact = f
   };
 
   useEffect(() => {
-    if (query.length > 0) {
-      const newSuggestions = generateAISuggestions(query);
-      setSuggestions(newSuggestions);
-      setShowSuggestions(true);
-    } else {
-      setShowSuggestions(false);
-    }
+    const loadSuggestions = async () => {
+      if (query.length > 0) {
+        const newSuggestions = await generateAISuggestions(query);
+        setSuggestions(newSuggestions);
+        setShowSuggestions(true);
+      } else {
+        setShowSuggestions(false);
+      }
+    };
+    loadSuggestions();
   }, [query]);
 
   useEffect(() => {
