@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Plus } from 'lucide-react';
+import { Edit, Trash2, Plus, Archive, ArchiveRestore } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Product {
@@ -22,6 +22,7 @@ interface Product {
   brand?: string;
   images?: string[];
   is_new?: boolean;
+  is_archived?: boolean;
 }
 
 const ProductManagement = () => {
@@ -42,8 +43,23 @@ const ProductManagement = () => {
     }
   });
 
+  const handleToggleArchive = async (productId: string, isArchived: boolean) => {
+    const { error } = await supabase
+      .from('products')
+      .update({ is_archived: !isArchived })
+      .eq('id', productId);
+
+    if (error) {
+      toast.error('Failed to update product');
+      return;
+    }
+
+    toast.success(isArchived ? 'Product unarchived successfully' : 'Product archived successfully');
+    queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+  };
+
   const handleDeleteProduct = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    if (!confirm('Are you sure you want to permanently delete this product?')) return;
 
     const { error } = await supabase
       .from('products')
@@ -257,6 +273,7 @@ const ProductManagement = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     {product.name}
+                    {product.is_archived && <Badge variant="outline" className="bg-gray-500 text-white border-0">Archived</Badge>}
                     {product.is_new && <Badge className="bg-green-500">New</Badge>}
                   </CardTitle>
                   <div className="flex items-center gap-2 mt-2">
@@ -285,6 +302,15 @@ const ProductManagement = () => {
                     </DialogContent>
                   </Dialog>
                   
+                  <Button
+                    variant={product.is_archived ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleToggleArchive(product.id, product.is_archived || false)}
+                    title={product.is_archived ? "Unarchive product" : "Archive product"}
+                  >
+                    {product.is_archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+                  </Button>
+
                   <Button
                     variant="outline"
                     size="sm"

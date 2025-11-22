@@ -513,6 +513,7 @@ export type Database = {
           features: string[] | null
           id: string
           images: string[] | null
+          is_archived: boolean
           is_new: boolean | null
           name: string
           original_price: number | null
@@ -545,6 +546,7 @@ export type Database = {
           features?: string[] | null
           id?: string
           images?: string[] | null
+          is_archived?: boolean
           is_new?: boolean | null
           name: string
           original_price?: number | null
@@ -577,6 +579,7 @@ export type Database = {
           features?: string[] | null
           id?: string
           images?: string[] | null
+          is_archived?: boolean
           is_new?: boolean | null
           name?: string
           original_price?: number | null
@@ -976,7 +979,7 @@ export type Database = {
           created_at: string
           device_type: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           location: string | null
           page_path: string
           phone_number: string | null
@@ -988,7 +991,7 @@ export type Database = {
           created_at?: string
           device_type?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           location?: string | null
           page_path: string
           phone_number?: string | null
@@ -1000,7 +1003,7 @@ export type Database = {
           created_at?: string
           device_type?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           location?: string | null
           page_path?: string
           phone_number?: string | null
@@ -1035,18 +1038,9 @@ export type Database = {
       }
     }
     Functions: {
-      has_role: {
-        Args: { _role: string; user_uuid: string }
-        Returns: boolean
-      }
-      is_admin: {
-        Args: { user_uuid: string }
-        Returns: boolean
-      }
-      is_admin_user: {
-        Args: { user_uuid: string }
-        Returns: boolean
-      }
+      has_role: { Args: { _role: string; user_uuid: string }; Returns: boolean }
+      is_admin: { Args: { user_uuid: string }; Returns: boolean }
+      is_admin_user: { Args: { user_uuid: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user" | "vendor"

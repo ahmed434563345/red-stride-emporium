@@ -48,7 +48,8 @@ const Search = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('*');
+        .select('*')
+        .eq('is_archived', false);
       if (error) throw error;
       return data as Product[];
     }
