@@ -131,6 +131,134 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Deals Banner Section */}
+      <section className="bg-gray-900 text-white py-3">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h3 className="text-xl font-bold">NEW DEALS <span className="text-yellow-400">EVERY DAY</span></h3>
+              <div className="hidden md:flex items-center gap-2">
+                {[20, 21, 22, 23, 24, 25, 26, 27, 28].map((day) => (
+                  <div key={day} className="flex flex-col items-center bg-gray-700 px-3 py-1 rounded text-xs">
+                    <span className="text-gray-400 text-[10px]">Nov</span>
+                    <span className="font-bold">{day}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Promotional Banner */}
+      <section className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div className="text-3xl font-bold">SOUQ*</div>
+              <div>
+                <div className="text-xl font-bold">INSTALLMENTS UP TO 6 MONTHS</div>
+                <div className="text-sm opacity-90">When paying with Souq Card</div>
+              </div>
+            </div>
+            <div className="hidden lg:flex items-center gap-8">
+              <div className="text-center">
+                <div className="text-4xl font-bold">0%</div>
+                <div className="text-xs">Interest</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold">0%</div>
+                <div className="text-xs">Purchase Fees</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold">0%</div>
+                <div className="text-xs">Down payment</div>
+              </div>
+              <div className="text-xs">*T&Cs apply</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Special Deals Hero Banner */}
+      <section className="bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 text-white py-16 relative overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center space-y-6">
+              <h2 className="text-6xl md:text-7xl font-bold animate-pulse">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300">
+                  SPECIAL FRIDAY
+                </span>
+              </h2>
+              <h3 className="text-4xl md:text-5xl font-bold text-cyan-400">MEGA DEALS</h3>
+              <p className="text-2xl md:text-3xl font-semibold">
+                UP TO <span className="text-5xl text-yellow-300 font-bold">-50%</span>
+              </p>
+              <Button size="lg" className="bg-cyan-500 hover:bg-cyan-600 text-white text-xl px-12 py-6 rounded-xl border-2 border-white/30">
+                SHOP NOW
+              </Button>
+            </div>
+          </div>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-2 pb-4">
+          {[...Array(7)].map((_, i) => (
+            <div
+              key={i}
+              className={`h-1 rounded-full transition-all ${
+                i === 1 ? 'w-8 bg-yellow-400' : 'w-1 bg-white/50'
+              }`}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* Quick Category Links */}
+      <section className="bg-background py-8 border-b">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-hide">
+            <button className="flex-shrink-0">
+              <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            {[
+              { label: 'Top-Selling Deals', emoji: '🏷️', color: 'from-yellow-400 to-yellow-500' },
+              { label: "Don't Miss Out", emoji: '⚡', color: 'from-red-500 to-pink-500' },
+              { label: 'Deals', emoji: '🎯', color: 'from-red-600 to-red-700' },
+              { label: 'Bundles', emoji: '🎁', color: 'from-gray-600 to-gray-700' },
+              { label: 'Coupon Zone', emoji: '🎫', color: 'from-pink-500 to-red-500' },
+              { label: 'Installments', emoji: '👕', color: 'from-purple-500 to-purple-600' },
+              { label: 'Supermarket', emoji: '🛒', color: 'from-pink-400 to-pink-500' },
+              { label: 'Home & Kitchen', emoji: '🏠', color: 'from-yellow-500 to-orange-500' },
+              { label: 'Baby', emoji: '👶', color: 'from-blue-400 to-blue-500' },
+              { label: 'Beauty', emoji: '💄', color: 'from-pink-300 to-pink-400' },
+              { label: "Women's Fashion", emoji: '👗', color: 'from-purple-400 to-purple-500' },
+              { label: "Men's Fashion", emoji: '👔', color: 'from-gray-700 to-gray-800' },
+            ].map((category, index) => (
+              <Link
+                key={index}
+                to="/products"
+                className="flex-shrink-0 flex flex-col items-center gap-2 group"
+              >
+                <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${category.color} flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-200 shadow-lg`}>
+                  {category.emoji}
+                </div>
+                <span className="text-xs text-center font-medium max-w-[80px] leading-tight">
+                  {category.label}
+                </span>
+              </Link>
+            ))}
+
+            <button className="flex-shrink-0">
+              <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* Featured Products */}
       <section id="featured-products">
         <ProductSection
