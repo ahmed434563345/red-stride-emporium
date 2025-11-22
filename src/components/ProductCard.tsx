@@ -134,59 +134,58 @@ const ProductCard = ({ product, onWishlistChange }: ProductCardProps) => {
   }, [product.vendor_profile_id]);
 
   return (
-    <Card className="group relative overflow-hidden border-0 shadow-elegant hover:shadow-luxury hover-lift bg-white/80 backdrop-blur-sm">
+    <Card className="group relative overflow-hidden border border-border/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300 bg-card">
       <div className="relative">
         <Link to={`/product/${product.id}`}>
-          <div className="aspect-square overflow-hidden bg-gradient-to-br from-souq-cream to-souq-sand">
+          <div className="aspect-square overflow-hidden bg-muted/30">
             <img
               src={productImage}
               alt={product.name}
-              className="h-full w-full object-contain transition-all duration-500 group-hover:scale-110 p-6"
+              className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105 p-4"
             />
           </div>
         </Link>
 
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
+        <div className="absolute top-2 left-2 flex flex-col gap-1.5">
           {product.is_new && (
-            <Badge className="souq-gradient border-0 text-white shadow-md font-semibold animate-fade-in">NEW</Badge>
+            <Badge className="bg-green-600 hover:bg-green-700 border-0 text-white text-xs px-2 py-0.5 font-medium">NEW</Badge>
           )}
           {discountPercentage > 0 && (
-            <Badge variant="destructive" className="shadow-md font-semibold animate-zoom-in">-{discountPercentage}%</Badge>
+            <Badge className="bg-red-600 hover:bg-red-700 border-0 text-white text-xs px-2 py-0.5 font-bold">-{discountPercentage}%</Badge>
           )}
           {!inStock && (
-            <Badge variant="secondary" className="shadow-md">Out of Stock</Badge>
+            <Badge variant="secondary" className="text-xs px-2 py-0.5">Out of Stock</Badge>
           )}
         </div>
 
         <Button
           variant="ghost"
           size="icon"
-          className={`absolute top-3 right-3 h-10 w-10 rounded-full ${
-            isWishlisted ? 'text-red-500 bg-red-50' : 'text-gray-400 glass-card'
-          } hover:text-red-500 hover:bg-red-50 transition-all duration-300 hover:scale-110 shadow-md`}
+          className={`absolute top-2 right-2 h-9 w-9 rounded-full ${
+            isWishlisted ? 'text-red-500 bg-red-50 hover:bg-red-100' : 'text-muted-foreground bg-background/80 hover:bg-background'
+          } transition-all duration-200 shadow-sm hover:shadow-md`}
           onClick={handleToggleWishlist}
         >
-          <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-current animate-zoom-in' : ''}`} />
+          <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
         </Button>
 
-        <div className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
+        <div className="absolute inset-x-2 bottom-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <Button
             onClick={handleAddToCart}
             disabled={!inStock || isLoading}
-            variant="luxury"
-            size="lg"
-            className="w-full shadow-gold"
+            size="sm"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
           >
             {isLoading ? (
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-3 h-3 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                 Adding...
               </div>
             ) : !inStock ? (
               "Out of Stock"
             ) : (
               <>
-                <ShoppingCart className="mr-2 h-5 w-5" />
+                <ShoppingCart className="mr-1.5 h-4 w-4" />
                 Add to Cart
               </>
             )}
@@ -194,45 +193,42 @@ const ProductCard = ({ product, onWishlistChange }: ProductCardProps) => {
         </div>
       </div>
 
-      <CardContent className="p-5">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Badge variant="secondary" className="text-xs font-medium px-3 py-1 rounded-full bg-souq-gold-muted text-souq-navy">
-              {product.category}
-            </Badge>
-            {vendorInfo.name && (
-              <div className="flex items-center gap-1">
-                {vendorInfo.logo && (
-                  <img src={vendorInfo.logo} alt={vendorInfo.name} className="h-5 w-5 rounded-full object-cover" />
-                )}
-                <span className="text-xs text-muted-foreground">{vendorInfo.name}</span>
-              </div>
-            )}
-          </div>
-          
-          <Link to={`/product/${product.id}`}>
-            <h3 className="font-semibold text-base hover:souq-text-gradient transition-all duration-300 line-clamp-2 leading-tight">
-              {product.name}
-            </h3>
-          </Link>
+      <CardContent className="p-3 space-y-2">
+        <Link to={`/product/${product.id}`}>
+          <h3 className="font-medium text-sm hover:text-primary transition-colors line-clamp-2 leading-snug min-h-[2.5rem]">
+            {product.name}
+          </h3>
+        </Link>
 
-          {product.brand && (
-            <p className="text-sm text-muted-foreground font-medium">{product.brand}</p>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span className="inline-flex items-center">
+            ⭐ <span className="ml-0.5 font-medium">4.5</span>
+          </span>
+          <span className="text-muted-foreground/60">(127)</span>
+        </div>
+
+        <div className="flex items-baseline gap-2">
+          <span className="font-bold text-base text-foreground">EGP {product.price}</span>
+          {product.original_price && (
+            <span className="text-xs text-muted-foreground line-through">
+              {product.original_price}
+            </span>
           )}
+        </div>
 
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-xl text-souq-gold">{product.price} L.E</span>
-              {product.original_price && (
-                <span className="text-sm text-muted-foreground line-through font-medium">
-                  {product.original_price} L.E
-                </span>
-              )}
-            </div>
-            <div className="text-xs text-muted-foreground bg-souq-sand px-2 py-1 rounded-md">
-              Stock: {product.stock}
-            </div>
-          </div>
+        <div className="flex items-center gap-1.5 text-xs">
+          <span className="inline-flex items-center gap-1 text-green-600 font-medium">
+            🚚 Free Delivery
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-yellow-400 text-black border-0 font-bold">
+            express
+          </Badge>
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-black text-white border-0">
+            Tomorrow
+          </Badge>
         </div>
       </CardContent>
     </Card>

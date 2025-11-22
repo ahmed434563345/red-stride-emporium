@@ -26,7 +26,8 @@ const MenCapsAccessories = () => {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('category', 'Men / Caps & Accessories');
+        .eq('category', 'Men / Caps & Accessories')
+        .eq('is_archived', false);
       if (error) throw error;
       return data;
     }

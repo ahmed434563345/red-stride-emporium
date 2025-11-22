@@ -30,6 +30,7 @@ const Index = () => {
       const { data, error } = await supabase
         .from('products')
         .select('*')
+        .eq('is_archived', false)
         .limit(4);
       if (error) throw error;
       return data as Product[];
@@ -43,6 +44,7 @@ const Index = () => {
         .from('products')
         .select('*')
         .eq('is_new', true)
+        .eq('is_archived', false)
         .limit(4);
       if (error) throw error;
       return data as Product[];
@@ -56,6 +58,7 @@ const Index = () => {
         .from('products')
         .select('*')
         .eq('category', 'Athletic Wear')
+        .eq('is_archived', false)
         .limit(4);
       if (error) throw error;
       return data as Product[];
@@ -69,6 +72,7 @@ const Index = () => {
         .from('products')
         .select('*')
         .eq('category', 'Outerwear')
+        .eq('is_archived', false)
         .limit(4);
       if (error) throw error;
       return data as Product[];

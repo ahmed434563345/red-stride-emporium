@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, Eye } from 'lucide-react';
+import { Pencil, Trash2, Eye, Archive, ArchiveRestore } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -16,6 +16,7 @@ interface Product {
   images: string[];
   is_new: boolean;
   created_at: string;
+  is_archived: boolean;
 }
 
 interface VendorProductManagementProps {
@@ -39,8 +40,24 @@ const VendorProductManagement = ({ vendorProfileId }: VendorProductManagementPro
     }
   });
 
+  const handleToggleArchive = async (productId: string, isArchived: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ is_archived: !isArchived })
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      toast.success(isArchived ? 'Product unarchived successfully' : 'Product archived successfully');
+      queryClient.invalidateQueries({ queryKey: ['vendor-products', vendorProfileId] });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update product');
+    }
+  };
+
   const handleDeleteProduct = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    if (!confirm('Are you sure you want to permanently delete this product?')) return;
 
     try {
       const { error } = await supabase
@@ -100,7 +117,10 @@ const VendorProductManagement = ({ vendorProfileId }: VendorProductManagementPro
                   <span className="text-muted-foreground">No Image</span>
                 </div>
               )}
-              <div className="absolute top-2 right-2 flex gap-1">
+              <div className="absolute top-2 right-2 flex flex-col gap-1">
+                {product.is_archived && (
+                  <Badge variant="outline" className="text-xs bg-gray-500 text-white border-0">ARCHIVED</Badge>
+                )}
                 {product.is_new && (
                   <Badge variant="secondary" className="text-xs">NEW</Badge>
                 )}
@@ -126,6 +146,14 @@ const VendorProductManagement = ({ vendorProfileId }: VendorProductManagementPro
                 <Button size="sm" variant="outline" className="flex-1">
                   <Pencil className="h-4 w-4 mr-1" />
                   Edit
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant={product.is_archived ? "default" : "outline"}
+                  onClick={() => handleToggleArchive(product.id, product.is_archived)}
+                  title={product.is_archived ? "Unarchive product" : "Archive product"}
+                >
+                  {product.is_archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
                 </Button>
                 <Button 
                   size="sm" 

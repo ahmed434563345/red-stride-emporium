@@ -27,7 +27,8 @@ const MenTShirts = () => {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('category', 'Men / T-Shirts');
+        .eq('category', 'Men / T-Shirts')
+        .eq('is_archived', false);
       if (error) throw error;
       return data;
     }
