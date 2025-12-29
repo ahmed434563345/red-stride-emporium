@@ -62,6 +62,15 @@
     
     --souq-cream: 45 29% 97%;
     --souq-sand: 45 25% 94%;
+
+    /* Athletic Red/White Theme */
+    --athletic-red: 0 84% 50%;
+    --athletic-red-light: 0 84% 60%;
+    --athletic-red-dark: 0 84% 40%;
+    --athletic-white: 0 0% 100%;
+    --athletic-black: 0 0% 5%;
+    --athletic-gray: 0 0% 15%;
+    --athletic-gray-light: 0 0% 95%;
     
     /* Shadows for depth */
     --shadow-elegant: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
