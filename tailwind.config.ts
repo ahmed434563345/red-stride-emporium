@@ -74,6 +74,15 @@ export default {
 					'navy-light': 'hsl(var(--souq-navy-light))',
 					cream: 'hsl(var(--souq-cream))',
 					sand: 'hsl(var(--souq-sand))'
+				},
+				athletic: {
+					red: 'hsl(var(--athletic-red))',
+					'red-light': 'hsl(var(--athletic-red-light))',
+					'red-dark': 'hsl(var(--athletic-red-dark))',
+					white: 'hsl(var(--athletic-white))',
+					black: 'hsl(var(--athletic-black))',
+					gray: 'hsl(var(--athletic-gray))',
+					'gray-light': 'hsl(var(--athletic-gray-light))'
 				}
 			},
 			fontFamily: {
