@@ -1,10 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Heart, ShoppingCart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -32,7 +29,6 @@ const ProductCard = ({ product, onWishlistChange }: ProductCardProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Get the first image from images array or fallback to image prop
   const productImage = product.images?.[0] || product.image || '/placeholder.svg';
 
   useEffect(() => {
@@ -50,7 +46,10 @@ const ProductCard = ({ product, onWishlistChange }: ProductCardProps) => {
     return true;
   };
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!checkAuthentication()) return;
     
     if (product.stock <= 0) {
@@ -76,8 +75,6 @@ const ProductCard = ({ product, onWishlistChange }: ProductCardProps) => {
     }
     
     localStorage.setItem('cart', JSON.stringify(cart));
-    
-    // Trigger cart update event
     window.dispatchEvent(new CustomEvent('cartUpdated'));
     
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -85,7 +82,10 @@ const ProductCard = ({ product, onWishlistChange }: ProductCardProps) => {
     toast.success(`${product.name} added to cart!`);
   };
 
-  const handleToggleWishlist = () => {
+  const handleToggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!checkAuthentication()) return;
     
     const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
@@ -102,18 +102,11 @@ const ProductCard = ({ product, onWishlistChange }: ProductCardProps) => {
     
     localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
     setIsWishlisted(!isWishlisted);
-    
-    // Trigger wishlist update event
     window.dispatchEvent(new CustomEvent('wishlistUpdated'));
   };
 
-  const discountPercentage = product.original_price 
-    ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
-    : 0;
-
   const inStock = product.stock > 0;
 
-  // Fetch vendor info
   const [vendorInfo, setVendorInfo] = useState<{ name?: string; logo?: string }>({});
 
   useEffect(() => {
@@ -134,104 +127,64 @@ const ProductCard = ({ product, onWishlistChange }: ProductCardProps) => {
   }, [product.vendor_profile_id]);
 
   return (
-    <Card className="group relative overflow-hidden border border-border/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300 bg-card">
-      <div className="relative">
-        <Link to={`/product/${product.id}`}>
-          <div className="aspect-square overflow-hidden bg-muted/30">
-            <img
-              src={productImage}
-              alt={product.name}
-              className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105 p-4"
-            />
-          </div>
-        </Link>
-
-        <div className="absolute top-2 left-2 flex flex-col gap-1.5">
-          {product.is_new && (
-            <Badge className="bg-green-600 hover:bg-green-700 border-0 text-white text-xs px-2 py-0.5 font-medium">NEW</Badge>
-          )}
-          {discountPercentage > 0 && (
-            <Badge className="bg-red-600 hover:bg-red-700 border-0 text-white text-xs px-2 py-0.5 font-bold">-{discountPercentage}%</Badge>
-          )}
-          {!inStock && (
-            <Badge variant="secondary" className="text-xs px-2 py-0.5">Out of Stock</Badge>
-          )}
-        </div>
-
+    <Link to={`/product/${product.id}`} className="group block">
+      <div className="relative bg-card border border-border/30 hover:border-border transition-all duration-300">
+        {/* Wishlist Button */}
         <Button
           variant="ghost"
           size="icon"
-          className={`absolute top-2 right-2 h-9 w-9 rounded-full ${
-            isWishlisted ? 'text-red-500 bg-red-50 hover:bg-red-100' : 'text-muted-foreground bg-background/80 hover:bg-background'
-          } transition-all duration-200 shadow-sm hover:shadow-md`}
+          className={`absolute top-3 right-3 z-10 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
+            isWishlisted 
+              ? 'text-red-500 bg-background/90 opacity-100' 
+              : 'text-muted-foreground bg-background/80 hover:bg-background'
+          }`}
           onClick={handleToggleWishlist}
         >
           <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
         </Button>
 
-        <div className="absolute inset-x-2 bottom-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        {/* Product Image */}
+        <div className="aspect-square overflow-hidden bg-muted/10 flex items-center justify-center p-6">
+          <img
+            src={productImage}
+            alt={product.name}
+            className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+          />
+        </div>
+
+        {/* Quick Add - Shows on hover */}
+        <div className="absolute inset-x-0 bottom-0 p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
           <Button
             onClick={handleAddToCart}
             disabled={!inStock || isLoading}
             size="sm"
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+            className="w-full bg-foreground hover:bg-foreground/90 text-background font-medium uppercase text-xs tracking-wider"
           >
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                Adding...
-              </div>
-            ) : !inStock ? (
-              "Out of Stock"
-            ) : (
-              <>
-                <ShoppingCart className="mr-1.5 h-4 w-4" />
-                Add to Cart
-              </>
-            )}
+            {isLoading ? 'Adding...' : !inStock ? 'Sold Out' : 'Quick Add'}
           </Button>
         </div>
       </div>
 
-      <CardContent className="p-3 space-y-2">
-        <Link to={`/product/${product.id}`}>
-          <h3 className="font-medium text-sm hover:text-primary transition-colors line-clamp-2 leading-snug min-h-[2.5rem]">
-            {product.name}
-          </h3>
-        </Link>
-
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <span className="inline-flex items-center">
-            ⭐ <span className="ml-0.5 font-medium">4.5</span>
-          </span>
-          <span className="text-muted-foreground/60">(127)</span>
-        </div>
-
-        <div className="flex items-baseline gap-2">
-          <span className="font-bold text-base text-foreground">EGP {product.price}</span>
-          {product.original_price && (
-            <span className="text-xs text-muted-foreground line-through">
-              {product.original_price}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1.5 text-xs">
-          <span className="inline-flex items-center gap-1 text-green-600 font-medium">
-            🚚 Free Delivery
+      {/* Product Info */}
+      <div className="pt-4 pb-2 space-y-1">
+        {/* Brand */}
+        <p className="text-xs text-muted-foreground tracking-wide">
+          {vendorInfo.name || product.brand || product.category}
+        </p>
+        
+        {/* Product Name */}
+        <h3 className="font-medium text-sm uppercase tracking-wide text-foreground leading-tight line-clamp-2">
+          {product.name}
+        </h3>
+        
+        {/* Price */}
+        <div className="pt-1">
+          <span className="text-sm font-medium text-foreground">
+            EGP {product.price.toLocaleString()}+
           </span>
         </div>
-
-        <div className="flex items-center gap-1.5">
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-yellow-400 text-black border-0 font-bold">
-            express
-          </Badge>
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-black text-white border-0">
-            Tomorrow
-          </Badge>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </Link>
   );
 };
 
