@@ -1,16 +1,13 @@
 import { Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import ProductSection from '@/components/ProductSection';
-import ProductSuggestions from '@/components/ProductSuggestions';
-import ThreeDAnimation from '@/components/ThreeDAnimation';
-import HelloIntro from '@/components/HelloIntro';
 import VisitorTracker from '@/components/VisitorTracker';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { ArrowRight, Truck, Shield, RefreshCw, Star } from 'lucide-react';
 
-// Updated Product interface to match Supabase data structure
 interface Product {
   id: string;
   name: string;
@@ -31,7 +28,7 @@ const Index = () => {
         .from('products')
         .select('*')
         .eq('is_archived', false)
-        .limit(4);
+        .limit(8);
       if (error) throw error;
       return data as Product[];
     }
@@ -45,330 +42,251 @@ const Index = () => {
         .select('*')
         .eq('is_new', true)
         .eq('is_archived', false)
-        .limit(4);
+        .limit(8);
       if (error) throw error;
       return data as Product[];
     }
   });
 
-  const { data: athleticWear = [] } = useQuery({
-    queryKey: ['athletic-wear'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('category', 'Athletic Wear')
-        .eq('is_archived', false)
-        .limit(4);
-      if (error) throw error;
-      return data as Product[];
-    }
-  });
+  const brands = [
+    { name: 'Nike', logo: '✓', tagline: 'Just Do It' },
+    { name: 'Adidas', logo: '⫿', tagline: 'Impossible Is Nothing' },
+    { name: 'Puma', logo: '🐆', tagline: 'Forever Faster' },
+    { name: 'New Balance', logo: 'NB', tagline: 'Fearlessly Independent' },
+  ];
 
-  const { data: outerwear = [] } = useQuery({
-    queryKey: ['outerwear'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('category', 'Outerwear')
-        .eq('is_archived', false)
-        .limit(4);
-      if (error) throw error;
-      return data as Product[];
-    }
-  });
+  const categories = [
+    { name: 'Running Shoes', image: '👟', link: '/shoes', count: '200+' },
+    { name: 'Men\'s Wear', image: '👕', link: '/men-t-shirts', count: '150+' },
+    { name: 'Women\'s Wear', image: '👗', link: '/women-t-shirts', count: '180+' },
+    { name: 'Athletic Wear', image: '🏃', link: '/athletic-wear', count: '120+' },
+    { name: 'Accessories', image: '🧢', link: '/men-caps-accessories', count: '80+' },
+    { name: 'Outerwear', image: '🧥', link: '/outerwear', count: '90+' },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
-      <HelloIntro />
       <Navigation />
       <VisitorTracker />
 
-      {/* Enhanced Hero Section */}
-      <section className="souq-hero-gradient text-white py-24 lg:py-32 relative overflow-hidden">
-        <div className="absolute inset-0 geometric-pattern opacity-10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
+      {/* Hero Section */}
+      <section className="relative bg-foreground text-background overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent" />
         
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center min-h-[60vh]">
-            <div className="text-center lg:text-left space-y-8">
-              <div className="space-y-4">
-                <h1 className="font-display text-hero font-bold mb-4 slide-in-left text-reveal">
-                  أهلاً بك في سوق مصر
-                </h1>
-                <h2 className="text-display font-bold mb-6 slide-in-left bg-gradient-to-r from-souq-gold to-souq-gold-light bg-clip-text text-transparent">
-                  Welcome to Souq Masr
-                </h2>
+        <div className="container mx-auto px-4 py-12 md:py-20 lg:py-28">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+            <div className="space-y-6 md:space-y-8 text-center lg:text-left z-10">
+              <div className="inline-block bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-sm font-semibold">
+                New Collection 2024
               </div>
               
-              <p className="text-xl lg:text-2xl mb-8 max-w-2xl slide-in-right leading-relaxed text-white/90 font-light">
-                Your premium Egyptian marketplace - Discover authentic treasures, 
-                modern innovation, and everything that makes Egypt extraordinary.
+              <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight">
+                <span className="text-primary">ATHLETIC</span>
+                <br />
+                <span className="text-background">Performance</span>
+                <br />
+                <span className="text-muted">Gear</span>
+              </h1>
+              
+              <p className="text-lg md:text-xl text-muted max-w-lg mx-auto lg:mx-0">
+                Premium athletic shoes and clothing from Nike, Adidas, Puma & New Balance. 
+                Elevate your game with top brands.
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-4 fade-in-up">
-                <Link to="/products">
-                  <Button size="xl" variant="luxury" className="text-lg px-12 py-6 glow-effect">
-                    🛍️ Start Shopping
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Link to="/shoes">
+                  <Button size="lg" className="w-full sm:w-auto text-lg px-8 py-6 bg-primary hover:bg-primary/90">
+                    Shop Shoes
+                    <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
                 <Link to="/products">
-                  <Button size="xl" variant="elegant" className="text-lg px-12 py-6">
-                    Browse Categories
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-8 py-6 border-background text-background hover:bg-background hover:text-foreground">
+                    All Products
                   </Button>
                 </Link>
               </div>
             </div>
             
-            <div className="flex justify-center lg:justify-end">
-              <div className="relative">
-                <div className="absolute -inset-4 souq-gradient rounded-full blur-xl opacity-30 animate-pulse"></div>
-                <ThreeDAnimation className="floating-animation relative z-10" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Deals Banner Section */}
-      <section className="bg-gray-900 text-white py-3">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h3 className="text-xl font-bold">NEW DEALS <span className="text-yellow-400">EVERY DAY</span></h3>
-              <div className="hidden md:flex items-center gap-2">
-                {[20, 21, 22, 23, 24, 25, 26, 27, 28].map((day) => (
-                  <div key={day} className="flex flex-col items-center bg-gray-700 px-3 py-1 rounded text-xs">
-                    <span className="text-gray-400 text-[10px]">Nov</span>
-                    <span className="font-bold">{day}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Promotional Banner */}
-      <section className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="text-3xl font-bold">SOUQ*</div>
-              <div>
-                <div className="text-xl font-bold">INSTALLMENTS UP TO 6 MONTHS</div>
-                <div className="text-sm opacity-90">When paying with Souq Card</div>
-              </div>
-            </div>
-            <div className="hidden lg:flex items-center gap-8">
-              <div className="text-center">
-                <div className="text-4xl font-bold">0%</div>
-                <div className="text-xs">Interest</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold">0%</div>
-                <div className="text-xs">Purchase Fees</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold">0%</div>
-                <div className="text-xs">Down payment</div>
-              </div>
-              <div className="text-xs">*T&Cs apply</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Special Deals Hero Banner */}
-      <section className="bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 text-white py-16 relative overflow-hidden">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center space-y-6">
-              <h2 className="text-6xl md:text-7xl font-bold animate-pulse">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300">
-                  SPECIAL FRIDAY
-                </span>
-              </h2>
-              <h3 className="text-4xl md:text-5xl font-bold text-cyan-400">MEGA DEALS</h3>
-              <p className="text-2xl md:text-3xl font-semibold">
-                UP TO <span className="text-5xl text-yellow-300 font-bold">-50%</span>
-              </p>
-              <Button size="lg" className="bg-cyan-500 hover:bg-cyan-600 text-white text-xl px-12 py-6 rounded-xl border-2 border-white/30">
-                SHOP NOW
-              </Button>
-            </div>
-          </div>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-2 pb-4">
-          {[...Array(7)].map((_, i) => (
-            <div
-              key={i}
-              className={`h-1 rounded-full transition-all ${
-                i === 1 ? 'w-8 bg-yellow-400' : 'w-1 bg-white/50'
-              }`}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* Quick Category Links */}
-      <section className="bg-background py-8 border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-hide">
-            <button className="flex-shrink-0">
-              <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            
-            {[
-              { label: 'Top-Selling Deals', emoji: '🏷️', color: 'from-yellow-400 to-yellow-500' },
-              { label: "Don't Miss Out", emoji: '⚡', color: 'from-red-500 to-pink-500' },
-              { label: 'Deals', emoji: '🎯', color: 'from-red-600 to-red-700' },
-              { label: 'Bundles', emoji: '🎁', color: 'from-gray-600 to-gray-700' },
-              { label: 'Coupon Zone', emoji: '🎫', color: 'from-pink-500 to-red-500' },
-              { label: 'Installments', emoji: '👕', color: 'from-purple-500 to-purple-600' },
-              { label: 'Supermarket', emoji: '🛒', color: 'from-pink-400 to-pink-500' },
-              { label: 'Home & Kitchen', emoji: '🏠', color: 'from-yellow-500 to-orange-500' },
-              { label: 'Baby', emoji: '👶', color: 'from-blue-400 to-blue-500' },
-              { label: 'Beauty', emoji: '💄', color: 'from-pink-300 to-pink-400' },
-              { label: "Women's Fashion", emoji: '👗', color: 'from-purple-400 to-purple-500' },
-              { label: "Men's Fashion", emoji: '👔', color: 'from-gray-700 to-gray-800' },
-            ].map((category, index) => (
-              <Link
-                key={index}
-                to="/products"
-                className="flex-shrink-0 flex flex-col items-center gap-2 group"
-              >
-                <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${category.color} flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-200 shadow-lg`}>
-                  {category.emoji}
+            <div className="relative flex justify-center lg:justify-end">
+              <div className="relative w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96">
+                <div className="absolute inset-0 bg-primary rounded-full blur-3xl opacity-30 animate-pulse" />
+                <div className="relative z-10 w-full h-full flex items-center justify-center text-[150px] md:text-[200px] floating-animation">
+                  👟
                 </div>
-                <span className="text-xs text-center font-medium max-w-[80px] leading-tight">
-                  {category.label}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Brands Bar */}
+      <section className="bg-background border-b py-6 md:py-8">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+            {brands.map((brand) => (
+              <Link
+                key={brand.name}
+                to="/products"
+                className="flex items-center justify-center gap-3 p-4 rounded-xl hover:bg-muted transition-colors group"
+              >
+                <span className="text-2xl md:text-3xl font-bold text-primary group-hover:scale-110 transition-transform">
+                  {brand.logo}
                 </span>
+                <div className="hidden sm:block">
+                  <p className="font-bold text-foreground">{brand.name}</p>
+                  <p className="text-xs text-muted-foreground">{brand.tagline}</p>
+                </div>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
 
-            <button className="flex-shrink-0">
-              <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+      {/* Categories Grid */}
+      <section className="py-12 md:py-16 lg:py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8 md:mb-12">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3">Shop by Category</h2>
+            <p className="text-muted-foreground text-base md:text-lg">Find your perfect athletic gear</p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
+            {categories.map((category) => (
+              <Link key={category.name} to={category.link}>
+                <Card className="group hover:shadow-lg hover:border-primary transition-all duration-300 h-full">
+                  <CardContent className="p-4 md:p-6 text-center">
+                    <div className="w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 mx-auto mb-3 md:mb-4 bg-primary/10 rounded-2xl flex items-center justify-center text-3xl md:text-4xl group-hover:scale-110 group-hover:bg-primary/20 transition-all">
+                      {category.image}
+                    </div>
+                    <h3 className="font-semibold text-sm md:text-base mb-1 group-hover:text-primary transition-colors">
+                      {category.name}
+                    </h3>
+                    <p className="text-xs md:text-sm text-muted-foreground">{category.count} items</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Sale Banner */}
+      <section className="bg-primary text-primary-foreground py-8 md:py-12">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+            <div className="space-y-2">
+              <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold">
+                UP TO 50% OFF
+              </h3>
+              <p className="text-primary-foreground/80 text-base md:text-lg">
+                Limited time offer on selected athletic gear
+              </p>
+            </div>
+            <Link to="/products">
+              <Button size="lg" variant="secondary" className="px-8 py-6 text-lg bg-background text-foreground hover:bg-background/90">
+                Shop Sale
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Featured Products */}
-      <section id="featured-products">
+      <section className="py-12 md:py-16">
         <ProductSection
           title="Featured Products"
-          description="Handpicked treasures from our Egyptian marketplace"
+          description="Top picks from our collection"
           products={featuredProducts}
           viewAllLink="/products"
         />
       </section>
 
-      {/* Enhanced Shop by Category */}
-      <section className="py-20 bg-gradient-to-br from-souq-cream to-souq-sand">
+      {/* Men & Women Split Section */}
+      <section className="py-12 md:py-16 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-display font-bold mb-6 souq-text-gradient">Shop by Category</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Explore our curated collections of authentic and modern treasures</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Link to="/electronics" className="group">
-              <Card className="hover-lift bg-white/60 backdrop-blur-sm border-0 h-full">
-                <CardContent className="p-8">
-                  <div className="text-center space-y-4">
-                    <div className="souq-gradient h-20 w-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-gold">
-                      <span className="text-white text-3xl">📱</span>
-                    </div>
-                    <h3 className="text-2xl font-bold mb-3 group-hover:souq-text-gradient transition-all duration-300">Electronics</h3>
-                    <p className="text-muted-foreground leading-relaxed">Latest gadgets & innovative technology</p>
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            {/* Men Section */}
+            <Link to="/men-t-shirts" className="group relative overflow-hidden rounded-2xl aspect-[4/3] md:aspect-[16/9]">
+              <div className="absolute inset-0 bg-gradient-to-br from-foreground to-foreground/80" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-background p-6">
+                <span className="text-6xl md:text-8xl mb-4">👔</span>
+                <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2">Men's Collection</h3>
+                <p className="text-muted mb-4 text-center text-sm md:text-base">Performance wear for every athlete</p>
+                <Button variant="outline" className="border-background text-background hover:bg-background hover:text-foreground group-hover:scale-105 transition-transform">
+                  Shop Men <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </Link>
-            
-            <Link to="/home-garden" className="group">
-              <Card className="hover-lift bg-white/60 backdrop-blur-sm border-0 h-full">
-                <CardContent className="p-8">
-                  <div className="text-center space-y-4">
-                    <div className="souq-emerald-gradient h-20 w-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                      <span className="text-white text-3xl">🏠</span>
-                    </div>
-                    <h3 className="text-2xl font-bold mb-3 group-hover:souq-text-gradient transition-all duration-300">Home & Garden</h3>
-                    <p className="text-muted-foreground leading-relaxed">Beautiful home essentials & décor</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-            
-            <Link to="/books" className="group">
-              <Card className="hover-lift bg-white/60 backdrop-blur-sm border-0 h-full">
-                <CardContent className="p-8">
-                  <div className="text-center space-y-4">
-                    <div className="bg-gradient-to-br from-souq-navy to-souq-navy-light h-20 w-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                      <span className="text-white text-3xl">📚</span>
-                    </div>
-                    <h3 className="text-2xl font-bold mb-3 group-hover:souq-text-gradient transition-all duration-300">Books</h3>
-                    <p className="text-muted-foreground leading-relaxed">Knowledge, wisdom & literature</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-            
-            <Link to="/beauty" className="group">
-              <Card className="hover-lift bg-white/60 backdrop-blur-sm border-0 h-full">
-                <CardContent className="p-8">
-                  <div className="text-center space-y-4">
-                    <div className="bg-gradient-to-br from-pink-500 to-rose-500 h-20 w-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                      <span className="text-white text-3xl">💄</span>
-                    </div>
-                    <h3 className="text-2xl font-bold mb-3 group-hover:souq-text-gradient transition-all duration-300">Beauty</h3>
-                    <p className="text-muted-foreground leading-relaxed">Premium cosmetics & wellness</p>
-                  </div>
-                </CardContent>
-              </Card>
+
+            {/* Women Section */}
+            <Link to="/women-t-shirts" className="group relative overflow-hidden rounded-2xl aspect-[4/3] md:aspect-[16/9]">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary/80" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-primary-foreground p-6">
+                <span className="text-6xl md:text-8xl mb-4">👗</span>
+                <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2">Women's Collection</h3>
+                <p className="text-primary-foreground/80 mb-4 text-center text-sm md:text-base">Style meets performance</p>
+                <Button variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary group-hover:scale-105 transition-transform">
+                  Shop Women <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </Link>
           </div>
         </div>
       </section>
 
       {/* New Arrivals */}
-      <ProductSection
-        title="New Arrivals"
-        description="Fresh additions to our marketplace"
-        products={newArrivals}
-        viewAllLink="/products"
-      />
+      <section className="py-12 md:py-16">
+        <ProductSection
+          title="New Arrivals"
+          description="Fresh drops just for you"
+          products={newArrivals}
+          viewAllLink="/products"
+        />
+      </section>
 
-      {/* Product Suggestions */}
-      <div className="py-16 bg-gray-50">
+      {/* Features */}
+      <section className="py-12 md:py-16 bg-muted/30">
         <div className="container mx-auto px-4">
-          <ProductSuggestions limit={8} />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+            {[
+              { icon: Truck, title: 'Free Shipping', desc: 'On orders over $100' },
+              { icon: Shield, title: 'Secure Payment', desc: '100% protected' },
+              { icon: RefreshCw, title: 'Easy Returns', desc: '30 days return' },
+              { icon: Star, title: 'Premium Quality', desc: 'Authentic brands' },
+            ].map((feature) => (
+              <div key={feature.title} className="text-center p-4 md:p-6">
+                <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 bg-primary/10 rounded-full flex items-center justify-center">
+                  <feature.icon className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+                </div>
+                <h4 className="font-semibold text-sm md:text-base mb-1">{feature.title}</h4>
+                <p className="text-xs md:text-sm text-muted-foreground">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Enhanced Call to Action */}
-      <section className="souq-gradient-luxury text-white py-24 relative overflow-hidden">
-        <div className="absolute inset-0 arabic-pattern opacity-10" />
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="max-w-4xl mx-auto space-y-8">
-            <h2 className="font-display text-display font-bold mb-6">Ready to Explore Souq Masr?</h2>
-            <p className="text-xl lg:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed font-light">
-              Join thousands of satisfied customers who trust us for authentic Egyptian products and modern innovation
+      {/* CTA Section */}
+      <section className="bg-foreground text-background py-12 md:py-20">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-3xl mx-auto space-y-6">
+            <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold">
+              Ready to <span className="text-primary">Elevate</span> Your Game?
+            </h2>
+            <p className="text-muted text-base md:text-lg lg:text-xl">
+              Join thousands of athletes who trust Athletic for premium sports gear
             </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link to="/products">
-                <Button size="xl" variant="elegant" className="text-lg px-12 py-6 glow-effect">
-                  Browse All Products
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+              <Link to="/shoes">
+                <Button size="lg" className="w-full sm:w-auto text-base md:text-lg px-8 py-6">
+                  Shop Now
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link to="/signin">
-                <Button size="xl" variant="outline" className="text-lg px-12 py-6 border-white/30 text-white hover:bg-white/10">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto text-base md:text-lg px-8 py-6 border-muted text-muted hover:bg-muted hover:text-foreground">
                   Create Account
                 </Button>
               </Link>
@@ -376,6 +294,48 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="bg-background border-t py-8 md:py-12">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="col-span-2 md:col-span-1">
+              <h3 className="text-xl md:text-2xl font-bold text-primary mb-4">ATHLETIC</h3>
+              <p className="text-sm text-muted-foreground">
+                Premium athletic gear for champions. Nike, Adidas, Puma & New Balance.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-3 text-sm md:text-base">Shop</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link to="/shoes" className="hover:text-primary transition-colors">Shoes</Link></li>
+                <li><Link to="/men-t-shirts" className="hover:text-primary transition-colors">Men's Wear</Link></li>
+                <li><Link to="/women-t-shirts" className="hover:text-primary transition-colors">Women's Wear</Link></li>
+                <li><Link to="/athletic-wear" className="hover:text-primary transition-colors">Athletic Wear</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-3 text-sm md:text-base">Account</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link to="/signin" className="hover:text-primary transition-colors">Sign In</Link></li>
+                <li><Link to="/signup" className="hover:text-primary transition-colors">Sign Up</Link></li>
+                <li><Link to="/cart" className="hover:text-primary transition-colors">Cart</Link></li>
+                <li><Link to="/wishlist" className="hover:text-primary transition-colors">Wishlist</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-3 text-sm md:text-base">Help</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link to="/stores" className="hover:text-primary transition-colors">Our Stores</Link></li>
+                <li><Link to="/chat" className="hover:text-primary transition-colors">Contact Us</Link></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
+            <p>© 2024 Athletic. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
