@@ -2,19 +2,20 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, User, ChevronDown, Search, LogOut } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Menu, User, ChevronDown, LogOut, ShoppingBag, Heart, Home, Shirt, Watch, Footprints, Package, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import AISearchBar from '@/components/AISearchBar';
 import CartWishlistCounter from '@/components/CartWishlistCounter';
-import { supabase } from '@/integrations/supabase/client'; // Add this import
+import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 
 const Navigation = () => {
   const [user, setUser] = useState<any>(null);
+  const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Subscribe to auth state change for realtime login/logout UI update
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -25,11 +26,19 @@ const Navigation = () => {
       }
     };
     window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
+
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('storage', handler);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   const handleSignOut = async () => {
-    // Use Supabase to sign the user out and listen for logout propagation everywhere
     const { error } = await supabase.auth.signOut();
     if (error) {
       toast.error('Failed to sign out. Please try again.');
@@ -43,126 +52,148 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="glass-card border-b border-souq-gold/20 sticky top-0 z-50 backdrop-blur-xl">
+    <nav className={cn(
+      "sticky top-0 z-50 transition-all duration-500",
+      scrolled 
+        ? "glass-nav shadow-glass" 
+        : "bg-background/80 backdrop-blur-sm border-b border-border/50"
+    )}>
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-18">
+        <div className="flex items-center justify-between h-16 md:h-18">
+          {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <div className="souq-gradient h-10 w-10 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-md">
-              <span className="text-white font-bold text-base">سوق</span>
+            <div className="glass-button h-10 w-10 rounded-xl flex items-center justify-center group-hover:scale-105 transition-all duration-300">
+              <Sparkles className="h-5 w-5 text-primary" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-display text-xl font-bold souq-text-gradient">Souq Masr</span>
-              <span className="text-xs text-muted-foreground font-medium">Egyptian Marketplace</span>
-            </div>
+            <span className="font-bold text-xl tracking-tight">
+              <span className="text-primary">ATHLETIC</span>
+            </span>
           </Link>
-          <div className="hidden md:flex items-center space-x-8">
-            <Link to="/products" className="text-foreground hover:souq-text-gradient transition-all duration-300 font-semibold hover:scale-105">
-              All Products
+
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center space-x-1">
+            <Link to="/products">
+              <Button variant="ghost" className="glass-button-subtle font-medium">
+                <Package className="h-4 w-4 mr-2" />
+                Shop All
+              </Button>
             </Link>
-            {/* ----- Men Dropdown ----- */}
+
             <DropdownMenu>
-              <DropdownMenuTrigger className="text-foreground hover:souq-text-gradient transition-all duration-300 flex items-center font-semibold hover:scale-105">
-                Men
-                <ChevronDown className="ml-1 h-4 w-4" />
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="glass-button-subtle font-medium">
+                  <Shirt className="h-4 w-4 mr-2" />
+                  Men
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="glass-card border-souq-gold/20 shadow-luxury">
-                <DropdownMenuItem asChild>
-                  <Link to="/men/t-shirts">T-Shirts</Link>
+              <DropdownMenuContent className="glass-dropdown min-w-[180px]">
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link to="/men-t-shirts" className="flex items-center gap-2">
+                    <Shirt className="h-4 w-4" /> T-Shirts
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/men/jeans">Jeans</Link>
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link to="/men-jeans" className="flex items-center gap-2">
+                    <Package className="h-4 w-4" /> Jeans
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/men/caps-accessories">Caps &amp; Accessories</Link>
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link to="/men-caps-accessories" className="flex items-center gap-2">
+                    <Watch className="h-4 w-4" /> Accessories
+                  </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            {/* ----- Women Dropdown ----- */}
+
             <DropdownMenu>
-              <DropdownMenuTrigger className="text-foreground hover:souq-text-gradient transition-all duration-300 flex items-center font-semibold hover:scale-105">
-                Women
-                <ChevronDown className="ml-1 h-4 w-4" />
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="glass-button-subtle font-medium">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Women
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="glass-card border-souq-gold/20 shadow-luxury">
-                <DropdownMenuItem asChild>
-                  <Link to="/women/t-shirts">T-Shirts</Link>
+              <DropdownMenuContent className="glass-dropdown min-w-[180px]">
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link to="/women-t-shirts" className="flex items-center gap-2">
+                    <Shirt className="h-4 w-4" /> T-Shirts
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/women/jeans">Jeans</Link>
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link to="/women-jeans" className="flex items-center gap-2">
+                    <Package className="h-4 w-4" /> Jeans
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/women/caps-accessories">Caps &amp; Accessories</Link>
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link to="/women-caps-accessories" className="flex items-center gap-2">
+                    <Watch className="h-4 w-4" /> Accessories
+                  </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            {/* ----- New Categories Dropdown ----- */}
-            <DropdownMenu>
-              <DropdownMenuTrigger className="text-foreground hover:souq-text-gradient transition-all duration-300 flex items-center font-semibold hover:scale-105">
-                Categories
-                <ChevronDown className="ml-1 h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="glass-card border-souq-gold/20 shadow-luxury">
-                <DropdownMenuItem asChild>
-                  <Link to="/electronics">Electronics</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/home-garden">Home & Garden</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/books">Books</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/beauty">Beauty</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/shoes">Shoes</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/athletic-wear">Athletic Wear</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/outerwear">Outerwear</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+            <Link to="/shoes">
+              <Button variant="ghost" className="glass-button-subtle font-medium">
+                <Footprints className="h-4 w-4 mr-2" />
+                Footwear
+              </Button>
+            </Link>
+
+            <Link to="/athletic-wear">
+              <Button variant="ghost" className="glass-button-subtle font-medium">
+                <Sparkles className="h-4 w-4 mr-2" />
+                Athletic
+              </Button>
+            </Link>
           </div>
-          <div className="flex items-center space-x-4">
+
+          {/* Right Section */}
+          <div className="flex items-center space-x-2 md:space-x-3">
             <div className="hidden md:block">
               <AISearchBar />
             </div>
             
             {user ? (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-1 md:space-x-2">
                 <Link to="/wishlist">
-                  <Button variant="ghost" size="icon" className="hover:souq-text-gradient transition-all">
+                  <Button variant="ghost" size="icon" className="glass-button-subtle relative">
+                    <Heart className="h-5 w-5" />
                     <CartWishlistCounter type="wishlist" />
                   </Button>
                 </Link>
                 <Link to="/cart">
-                  <Button variant="ghost" size="icon" className="hover:souq-text-gradient transition-all">
+                  <Button variant="ghost" size="icon" className="glass-button-subtle relative">
+                    <ShoppingBag className="h-5 w-5" />
                     <CartWishlistCounter type="cart" />
                   </Button>
                 </Link>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="hover:souq-text-gradient transition-all">
+                    <Button variant="ghost" size="icon" className="glass-button-subtle">
                       <User className="h-5 w-5" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="glass-card border-souq-gold/20 shadow-luxury">
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile">Profile</Link>
+                  <DropdownMenuContent align="end" className="glass-dropdown min-w-[180px]">
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link to="/profile" className="flex items-center gap-2">
+                        <User className="h-4 w-4" /> Profile
+                      </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/vendor-dashboard">Vendor Dashboard</Link>
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link to="/vendor-dashboard" className="flex items-center gap-2">
+                        <Package className="h-4 w-4" /> Vendor Dashboard
+                      </Link>
                     </DropdownMenuItem>
                     {user.email === 'athletic.website99@gmail.com' && (
-                      <DropdownMenuItem asChild>
-                        <Link to="/admin">Admin</Link>
+                      <DropdownMenuItem asChild className="cursor-pointer">
+                        <Link to="/admin" className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4" /> Admin
+                        </Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut}>
+                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
                       <LogOut className="mr-2 h-4 w-4" />
                       Sign Out
                     </DropdownMenuItem>
@@ -170,85 +201,132 @@ const Navigation = () => {
                 </DropdownMenu>
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="hidden md:flex items-center space-x-2">
                 <Link to="/vendor-signup">
-                  <Button variant="outline" className="border-souq-gold text-souq-gold hover:bg-souq-gold hover:text-white transition-all">
+                  <Button variant="outline" className="glass-button-outline">
                     Sell
                   </Button>
                 </Link>
                 <Link to="/signin">
-                  <Button variant="ghost" className="hover:souq-text-gradient transition-all">Sign In</Button>
+                  <Button variant="ghost" className="glass-button-subtle">Sign In</Button>
                 </Link>
                 <Link to="/signup">
-                  <Button className="souq-gradient text-white">Sign Up</Button>
+                  <Button className="glass-button-primary">Sign Up</Button>
                 </Link>
               </div>
             )}
 
-            {/* Mobile menu button */}
+            {/* Mobile menu */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
+                <Button variant="ghost" size="icon" className="lg:hidden glass-button-subtle">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent className="sm:max-w-xs">
-                <SheetHeader>
-                  <SheetTitle>Menu</SheetTitle>
-                </SheetHeader>
-                <div className="grid gap-4 py-4">
-                  <Link to="/products" className="flex items-center space-x-2">
-                    All Products
-                  </Link>
-                  {/* Men Mobile Section */}
-                  <div className="font-semibold text-gray-600">Men</div>
-                  <Link to="/men/t-shirts" className="flex items-center space-x-2 pl-2">T-Shirts</Link>
-                  <Link to="/men/jeans" className="flex items-center space-x-2 pl-2">Jeans</Link>
-                  <Link to="/men/caps-accessories" className="flex items-center space-x-2 pl-2">Caps &amp; Accessories</Link>
-                  {/* Women Mobile Section */}
-                  <div className="font-semibold text-gray-600 mt-2">Women</div>
-                  <Link to="/women/t-shirts" className="flex items-center space-x-2 pl-2">T-Shirts</Link>
-                  <Link to="/women/jeans" className="flex items-center space-x-2 pl-2">Jeans</Link>
-                  <Link to="/women/caps-accessories" className="flex items-center space-x-2 pl-2">Caps &amp; Accessories</Link>
-                  {/* New Categories Mobile Section */}
-                  <div className="font-semibold text-gray-600 mt-2">Categories</div>
-                  <Link to="/electronics" className="flex items-center space-x-2 pl-2">Electronics</Link>
-                  <Link to="/home-garden" className="flex items-center space-x-2 pl-2">Home & Garden</Link>
-                  <Link to="/books" className="flex items-center space-x-2 pl-2">Books</Link>
-                  <Link to="/beauty" className="flex items-center space-x-2 pl-2">Beauty</Link>
-                  <Link to="/shoes" className="flex items-center space-x-2 pl-2">Shoes</Link>
-                  <Link to="/athletic-wear" className="flex items-center space-x-2 pl-2">Athletic Wear</Link>
-                  <Link to="/outerwear" className="flex items-center space-x-2 pl-2">Outerwear</Link>
-                  {user ? (
-                    <>
-                      <Link to="/profile" className="flex items-center space-x-2">
-                        Profile
-                      </Link>
-                      <Link to="/vendor-dashboard" className="flex items-center space-x-2">
-                        Vendor Dashboard
-                      </Link>
-                      {user.email === 'athletic.website99@gmail.com' && (
-                        <Link to="/admin" className="flex items-center space-x-2">
-                          Admin
+              <SheetContent className="glass-sheet w-[300px] p-0">
+                <div className="flex flex-col h-full">
+                  {/* Header */}
+                  <div className="p-6 border-b border-border/50">
+                    <div className="flex items-center gap-3">
+                      <div className="glass-button h-10 w-10 rounded-xl flex items-center justify-center">
+                        <Sparkles className="h-5 w-5 text-primary" />
+                      </div>
+                      <span className="font-bold text-xl text-primary">ATHLETIC</span>
+                    </div>
+                  </div>
+
+                  {/* Navigation Links */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-1">
+                    <Link to="/" className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors">
+                      <Home className="h-5 w-5 text-primary" />
+                      <span className="font-medium">Home</span>
+                    </Link>
+                    <Link to="/products" className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors">
+                      <Package className="h-5 w-5 text-primary" />
+                      <span className="font-medium">All Products</span>
+                    </Link>
+                    <Link to="/shoes" className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors">
+                      <Footprints className="h-5 w-5 text-primary" />
+                      <span className="font-medium">Footwear</span>
+                    </Link>
+
+                    <div className="pt-4 pb-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">Men</p>
+                    </div>
+                    <Link to="/men-t-shirts" className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors pl-6">
+                      <Shirt className="h-4 w-4 text-muted-foreground" />
+                      <span>T-Shirts</span>
+                    </Link>
+                    <Link to="/men-jeans" className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors pl-6">
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                      <span>Jeans</span>
+                    </Link>
+                    <Link to="/men-caps-accessories" className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors pl-6">
+                      <Watch className="h-4 w-4 text-muted-foreground" />
+                      <span>Accessories</span>
+                    </Link>
+
+                    <div className="pt-4 pb-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">Women</p>
+                    </div>
+                    <Link to="/women-t-shirts" className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors pl-6">
+                      <Shirt className="h-4 w-4 text-muted-foreground" />
+                      <span>T-Shirts</span>
+                    </Link>
+                    <Link to="/women-jeans" className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors pl-6">
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                      <span>Jeans</span>
+                    </Link>
+                    <Link to="/women-caps-accessories" className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors pl-6">
+                      <Watch className="h-4 w-4 text-muted-foreground" />
+                      <span>Accessories</span>
+                    </Link>
+
+                    <div className="pt-4 pb-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">More</p>
+                    </div>
+                    <Link to="/athletic-wear" className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors pl-6">
+                      <Sparkles className="h-4 w-4 text-muted-foreground" />
+                      <span>Athletic Wear</span>
+                    </Link>
+                    <Link to="/outerwear" className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors pl-6">
+                      <Shirt className="h-4 w-4 text-muted-foreground" />
+                      <span>Outerwear</span>
+                    </Link>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="p-4 border-t border-border/50 space-y-2">
+                    {user ? (
+                      <>
+                        <Link to="/profile" className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors">
+                          <User className="h-5 w-5 text-primary" />
+                          <span className="font-medium">Profile</span>
                         </Link>
-                      )}
-                      <Button variant="destructive" onClick={handleSignOut} className="w-full">
-                        Sign Out
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Link to="/vendor-signup" className="flex items-center space-x-2">
-                        Become a Vendor
-                      </Link>
-                      <Link to="/signin" className="flex items-center space-x-2">
-                        Sign In
-                      </Link>
-                      <Link to="/signup" className="flex items-center space-x-2">
-                        Sign Up
-                      </Link>
-                    </>
-                  )}
+                        <Button 
+                          variant="destructive" 
+                          onClick={handleSignOut} 
+                          className="w-full glass-button"
+                        >
+                          <LogOut className="mr-2 h-4 w-4" />
+                          Sign Out
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="space-y-2">
+                        <Link to="/signin" className="block">
+                          <Button variant="outline" className="w-full glass-button-outline">
+                            Sign In
+                          </Button>
+                        </Link>
+                        <Link to="/signup" className="block">
+                          <Button className="w-full glass-button-primary">
+                            Sign Up
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
